@@ -1,5 +1,5 @@
-use bevy::{prelude::*};
-use bevy_rapier2d::{prelude::{RapierContext, QueryFilter}};
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::{RapierContext, QueryFilter};
 
 pub struct SpriteDragDrop;
 
@@ -8,14 +8,27 @@ impl Plugin for SpriteDragDrop {
         app
             .add_event::<ClickEvent>()
             .add_event::<DropEvent>()
+            .insert_resource(TopLayer { current:1.0 })
 
             .add_startup_system(debug)
             .add_system_to_stage(CoreStage::First, sprite_click)
             .add_system(sprite_drag)
-            .add_system(debug_sprite_clicks)
-            .add_system(debug_sprite_drop)
             .add_system_to_stage(CoreStage::Last, sprite_end_drag)
             ;
+    }
+}
+
+#[derive(Resource)]
+pub struct TopLayer {
+    current: f32
+}
+
+impl TopLayer {
+    fn top(&mut self) -> f32 {
+        let cur = self.current;
+        //2^19, abitarily small power of 2. This acts as an "epsilon" expression to move the float up a small increment.
+        self.current += self.current / 524288.0;
+        cur
     }
 }
 
@@ -35,7 +48,6 @@ pub struct DropEvent {
 pub struct Dragging {
     pub offset: Vec2,
     pub start_pos: Vec2,
-    pub orig_z: f32
 }
 
 //TODO::Z, DEBUG!
@@ -116,7 +128,6 @@ fn sprite_click(
     .insert(Dragging {
         offset: cursor_offset,
         start_pos: sprite_position,
-        orig_z: xform.translation().z,
     });
 
     click_ev.send(ClickEvent { click_pos: cursor_pos, ent })
@@ -125,49 +136,27 @@ fn sprite_click(
 fn sprite_drag(
     mut mouse_moved_event: EventReader<CursorMoved>,
     mut sprites: Query<(&Dragging, &mut Transform), With<Sprite>>,
+    mut top_layer: ResMut<TopLayer>
 ) {
     let Some(motion) = mouse_moved_event.iter().last() else {return};
 
     for (dragging, mut xform) in &mut sprites {
-        xform.translation = (motion.position + dragging.offset).extend(100.0);
+        xform.translation = (motion.position + dragging.offset).extend(top_layer.top());
     }
 }
 
 fn sprite_end_drag(
     mut commands: Commands,
     button_input: Res<Input<MouseButton>>,
-    mut dragged_entities: Query<(Entity, &Dragging, &mut Transform)>,
+    dragged_entities: Query<(Entity, &Dragging)>,
     mut drop_ev: EventWriter<DropEvent>,
 ) {
     if !button_input.just_released(MouseButton::Left) {
         return;
     }
 
-    for (ent, drag, mut xform) in &mut dragged_entities {
+    for (ent, drag) in &dragged_entities {
         commands.entity(ent).remove::<Dragging>();
         drop_ev.send(DropEvent { drag_info: drag.clone(), ent});
-        xform.translation.z = drag.orig_z;
-        println!("Ended drag: {:?}", ent);
-    }
-}
-
-fn debug_sprite_clicks(
-    clickable_entities: Query<(Entity, &Sprite)>,
-    mut click_ev: EventReader<ClickEvent>,
-) {
-    for ev in click_ev.iter() {
-        let (ent, _) = clickable_entities.get(ev.ent).unwrap();
-        println!("Clicked: {:?}", ent);
-    }
-}
-
-fn debug_sprite_drop(
-    mut dropped_entities: Query<(Entity, &mut Transform)>,
-    mut drop_ev: EventReader<DropEvent>,
-) {
-    for ev in drop_ev.iter() {
-        let (ent, mut xform) = dropped_entities.get_mut(ev.ent).unwrap();
-        xform.translation = ev.drag_info.start_pos.extend(xform.translation.z);
-        println!("Dropped: {:?}", ent);
     }
 }
