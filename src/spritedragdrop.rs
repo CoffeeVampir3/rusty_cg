@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::{RapierContext, QueryFilter};
+pub use crate::*;
 
 pub struct SpriteDragDrop;
 
@@ -24,7 +25,7 @@ pub struct TopLayer {
 }
 
 impl TopLayer {
-    fn top(&mut self) -> f32 {
+    pub fn top(&mut self) -> f32 {
         let cur = self.current;
         //2^19, abitarily small power of 2. This acts as an "epsilon" expression to move the float up a small increment.
         self.current += self.current / 524288.0;
@@ -47,7 +48,7 @@ pub struct DropEvent {
 #[component(storage = "SparseSet")]
 pub struct Dragging {
     pub offset: Vec2,
-    pub start_pos: Vec2,
+    pub start_pos: Vec3,
 }
 
 //TODO::Z, DEBUG!
@@ -80,7 +81,7 @@ fn sprite_click(
     sprites: Query<(
         Entity,
         &GlobalTransform,
-    )>,
+    ), With<Sprite>>,
     mut click_ev: EventWriter<ClickEvent>,
     rapier_context: Res<RapierContext>,
     mut debug: Query<(&DebugMouseposDebugger, &mut Transform)>
@@ -88,24 +89,19 @@ fn sprite_click(
     if !button_input.just_pressed(MouseButton::Left) {
         return;
     }
-    let Some(location) = windows.get_primary() else {return};
-    let Some(cursor_pos) = location.cursor_position() else {return};
 
-    let window_size = Vec2 {
-        x: location.width(),
-        y: location.height(),
-    };
-
-    let cursor_point = cursor_pos - window_size / 2.0;
+    let Some(window) = windows.get_primary() else {return};
+    let cursor_point_system = window.cursor_position().unwrap();
+    let cursor_point_game = helpers::get_window_relative_cursor_pos(&window);
 
     //TODO:: @Z Debug!
     //DEBUG!
     let (_, mut dbgxform) = debug.single_mut();
-    dbgxform.translation = cursor_point.extend(20.0);
+    dbgxform.translation = cursor_point_game.extend(20.0);
 
     let mut max = f32::NEG_INFINITY;
     let mut res: Option<(Entity, &GlobalTransform)> = None;
-    rapier_context.intersections_with_point(cursor_point, QueryFilter::default(), 
+    rapier_context.intersections_with_point(cursor_point_game, QueryFilter::default(), 
     |x| {
         let Ok((ent, xform)) = sprites.get(x) else {return true};
 
@@ -117,20 +113,20 @@ fn sprite_click(
         }
         true
     });
-
-    let Some((ent, xform)) = res else {return};
+    
+    let Some((ent, xform)): Option<(Entity, &GlobalTransform)> = res else {return};
 
     let position = xform.translation();
     let sprite_position = position.truncate();
-    let cursor_offset = sprite_position - cursor_pos;
+    let cursor_offset = sprite_position - cursor_point_system;
 
     commands.entity(ent)
     .insert(Dragging {
         offset: cursor_offset,
-        start_pos: sprite_position,
+        start_pos: position,
     });
 
-    click_ev.send(ClickEvent { click_pos: cursor_pos, ent })
+    click_ev.send(ClickEvent { click_pos: cursor_point_system, ent })
 }
 
 fn sprite_drag(

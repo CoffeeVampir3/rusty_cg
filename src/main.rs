@@ -1,5 +1,6 @@
 mod spritedragdrop;
 mod cgsys;
+mod helpers;
 use bevy::text::Text2dBounds;
 pub use cgsys::*;
 pub use spritedragdrop::*;
@@ -54,7 +55,7 @@ fn setup(
     for x in (-2..=2).map(|x| x as f32 * card_width/2.0) {
         let sprite_bundle = SpriteBundle {
             texture: asset_server.load("test/whatever.png"),
-            transform: Transform::from_xyz(x, 0.0, ((x / card_width) + 8.0)/524288.0),
+            transform: Transform::from_xyz(x, -300.0, ((x / card_width) + 8.0)/524288.0),
             sprite: Sprite {
                 color: Color::Rgba { 
                     red: rand::thread_rng().gen(), 
@@ -86,4 +87,24 @@ fn setup(
             .insert(Name::new("text"));
         });
     }
+
+    let test_drop_zone = SpriteBundle {
+        //texture: asset_server.load("test/whatever.png"),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        sprite: Sprite {
+            color: Color::Rgba { 
+                red: 0.0, 
+                green: 0.0, 
+                blue: 0.0, 
+                alpha: 0.2 
+            },
+            custom_size: Some(Vec2{x:800.0, y:200.0}),
+            ..default()
+        },
+        ..default()
+    };
+
+    commands.spawn(test_drop_zone)
+    .insert(Collider::cuboid(400.0, 100.0))
+    .insert(Sensor);
 }
