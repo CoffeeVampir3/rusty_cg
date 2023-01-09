@@ -1,4 +1,4 @@
-use bevy::{window::Window, prelude::*};
+use bevy::{prelude::*, window::Window};
 
 pub fn get_window_relative_cursor_pos(wnd: &Window) -> Vec2 {
     let cursor_pos = wnd.cursor_position().unwrap();

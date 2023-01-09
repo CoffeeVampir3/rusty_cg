@@ -1,17 +1,14 @@
-use bevy_rapier2d::prelude::{RapierContext, QueryFilter};
 pub use crate::*;
+use bevy_rapier2d::prelude::{QueryFilter, RapierContext};
 pub struct SpriteDragDrop;
 
 impl Plugin for SpriteDragDrop {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<ClickEvent>()
+        app.add_event::<ClickEvent>()
             .add_event::<DropEvent>()
-
             .add_system_to_stage(CoreStage::First, sprite_click)
             .add_system(sprite_drag)
-            .add_system_to_stage(CoreStage::Last, sprite_end_drag)
-            ;
+            .add_system_to_stage(CoreStage::Last, sprite_end_drag);
     }
 }
 
@@ -22,7 +19,7 @@ pub struct ClickEvent {
 
 pub struct DropEvent {
     pub drag_info: Dragging,
-    pub ent: Entity
+    pub ent: Entity,
 }
 
 #[derive(Reflect, Component, Clone, Default)]
@@ -37,10 +34,7 @@ fn sprite_click(
     mut commands: Commands,
     button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
-    sprites: Query<(
-        Entity,
-        &GlobalTransform,
-    ), With<Sprite>>,
+    sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
     mut click_ev: EventWriter<ClickEvent>,
     rapier_context: Res<RapierContext>,
 ) {
@@ -54,8 +48,7 @@ fn sprite_click(
 
     let mut max = f32::NEG_INFINITY;
     let mut res: Option<(Entity, &GlobalTransform)> = None;
-    rapier_context.intersections_with_point(cursor_point_game, QueryFilter::default(), 
-    |x| {
+    rapier_context.intersections_with_point(cursor_point_game, QueryFilter::default(), |x| {
         let Ok((ent, xform)) = sprites.get(x) else {return true};
 
         let ord = xform.translation().z;
@@ -66,26 +59,28 @@ fn sprite_click(
         }
         true
     });
-    
+
     let Some((ent, xform)): Option<(Entity, &GlobalTransform)> = res else {return};
 
     let position = xform.translation();
     let sprite_position = position.truncate();
     let cursor_offset = sprite_position - cursor_point_system;
 
-    commands.entity(ent)
-    .insert(Dragging {
+    commands.entity(ent).insert(Dragging {
         offset: cursor_offset,
         start_pos: position,
     });
 
-    click_ev.send(ClickEvent { click_pos: cursor_point_system, ent })
+    click_ev.send(ClickEvent {
+        click_pos: cursor_point_system,
+        ent,
+    })
 }
 
 fn sprite_drag(
     mut mouse_moved_event: EventReader<CursorMoved>,
     mut sprites: Query<(&Dragging, &mut Transform), With<Sprite>>,
-    mut top_layer: ResMut<TopLayer>
+    mut top_layer: ResMut<TopLayer>,
 ) {
     let Some(motion) = mouse_moved_event.iter().last() else {return};
 
@@ -106,6 +101,9 @@ fn sprite_end_drag(
 
     for (ent, drag) in &dragged_entities {
         commands.entity(ent).remove::<Dragging>();
-        drop_ev.send(DropEvent { drag_info: drag.clone(), ent});
+        drop_ev.send(DropEvent {
+            drag_info: drag.clone(),
+            ent,
+        });
     }
 }
