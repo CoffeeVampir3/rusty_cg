@@ -1,7 +1,5 @@
-use bevy::prelude::*;
 use bevy_rapier2d::prelude::{RapierContext, QueryFilter};
 pub use crate::*;
-
 pub struct SpriteDragDrop;
 
 impl Plugin for SpriteDragDrop {
@@ -9,27 +7,11 @@ impl Plugin for SpriteDragDrop {
         app
             .add_event::<ClickEvent>()
             .add_event::<DropEvent>()
-            .insert_resource(TopLayer { current:1.0 })
 
-            .add_startup_system(debug)
             .add_system_to_stage(CoreStage::First, sprite_click)
             .add_system(sprite_drag)
             .add_system_to_stage(CoreStage::Last, sprite_end_drag)
             ;
-    }
-}
-
-#[derive(Resource)]
-pub struct TopLayer {
-    current: f32
-}
-
-impl TopLayer {
-    pub fn top(&mut self) -> f32 {
-        let cur = self.current;
-        //2^19, abitarily small power of 2. This acts as an "epsilon" expression to move the float up a small increment.
-        self.current += self.current / 524288.0;
-        cur
     }
 }
 
@@ -51,29 +33,6 @@ pub struct Dragging {
     pub start_pos: Vec3,
 }
 
-//TODO::Z, DEBUG!
-//DEBUG!
-#[derive(Reflect, Component, Default)]
-#[reflect(Component)]
-struct DebugMouseposDebugger;
-
-fn debug(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-    .spawn(SpriteBundle {
-        texture: asset_server.load("test/whatever.png"),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        sprite: Sprite {
-            color: Color::BLUE,
-            custom_size: Some(Vec2 { x: 30.0, y: 30.0 }),
-            ..default()
-        },
-        ..default()
-    })
-    .insert(Name::new("debug"))
-    .insert(DebugMouseposDebugger)
-    ;
-}
-
 fn sprite_click(
     mut commands: Commands,
     button_input: Res<Input<MouseButton>>,
@@ -84,7 +43,6 @@ fn sprite_click(
     ), With<Sprite>>,
     mut click_ev: EventWriter<ClickEvent>,
     rapier_context: Res<RapierContext>,
-    mut debug: Query<(&DebugMouseposDebugger, &mut Transform)>
 ) {
     if !button_input.just_pressed(MouseButton::Left) {
         return;
@@ -93,11 +51,6 @@ fn sprite_click(
     let Some(window) = windows.get_primary() else {return};
     let cursor_point_system = window.cursor_position().unwrap();
     let cursor_point_game = helpers::get_window_relative_cursor_pos(&window);
-
-    //TODO:: @Z Debug!
-    //DEBUG!
-    let (_, mut dbgxform) = debug.single_mut();
-    dbgxform.translation = cursor_point_game.extend(20.0);
 
     let mut max = f32::NEG_INFINITY;
     let mut res: Option<(Entity, &GlobalTransform)> = None;

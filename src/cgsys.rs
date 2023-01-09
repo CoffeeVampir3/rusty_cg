@@ -1,5 +1,4 @@
 pub use crate::*;
-
 pub struct CGSys;
 
 impl Plugin for CGSys {
@@ -12,6 +11,7 @@ impl Plugin for CGSys {
 
 fn sprite_on_drop(
     mut sprites: Query<(Entity, &mut Transform), With<Sprite>>,
+    immut_sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
     mut drop_ev: EventReader<DropEvent>,
     rapier_context: Res<RapierContext>,
 ) {
@@ -26,25 +26,26 @@ fn sprite_on_drop(
 
         rapier_context.intersections_with_point(xform.translation.truncate(), filter,
         |x| {
-            let Ok((ent, inner_xform)) = sprites.get(x) else {return true};
+            let Ok((ent, inner_xform)) = immut_sprites.get(x) else {return true};
     
-            let ord = inner_xform.translation.z;
+            let ord = inner_xform.translation().z;
     
             if ord >= max {
-                res = Some((ent, inner_xform.translation));
+                res = Some((ent, inner_xform.translation()));
                 max = ord;
             }
             true
         });
         
         let Ok((_, mut xform)) = sprites.get_mut(ev.ent) else {continue};
-        let Some((_, drop_target)): Option<(Entity, Vec3)> = 
+        let Some((drop_entity, drop_target)): Option<(Entity, Vec3)> = 
         res 
         else {
             xform.translation = ev.drag_info.start_pos;
             continue;
         };
 
-        xform.translation = drop_target.truncate().extend(xform.translation.z);
+        println!("Dropped on {:?}", drop_entity);
+        //xform.translation = drop_target.truncate().extend(xform.translation.z);
     }
 }
