@@ -155,8 +155,6 @@ fn handle_sprite_begin_drag(
     mut top_layer: ResMut<TopLayer>,
 ) {
     for (_, mut xform) in &mut sprites {
-        //TODO:: Z, There's a bug here because we keep calling top_layer.top() which is going to be a problem
-        //in the future.
         xform.translation = xform.translation.truncate().extend(top_layer.top());
     }
 }
