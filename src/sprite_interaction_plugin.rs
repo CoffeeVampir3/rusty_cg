@@ -5,7 +5,8 @@ pub struct SpriteInteractionPlugin;
 
 impl Plugin for SpriteInteractionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ClickEvent>()
+        app
+            .add_event::<ClickEvent>()
             .add_event::<DropEvent>()
             .add_event::<HoveringEvent>()
             .add_event::<HoverBeginEvent>()
@@ -13,6 +14,7 @@ impl Plugin for SpriteInteractionPlugin {
 
             .add_system_to_stage(CoreStage::First, handle_sprite_mouse_interactions)
             .add_system(handle_sprite_begin_drag)
+            .add_system(handle_sprite_drag)
             .add_system(handle_sprite_hover_events)
             .add_system_to_stage(CoreStage::Last, handle_sprite_end_drag)
 
@@ -149,16 +151,26 @@ fn handle_sprite_hover_events(
 }
 
 fn handle_sprite_begin_drag(
+    mut sprites: Query<(&Dragging, &mut Transform), (With<Sprite>, Added<Dragging>)>,
+    mut top_layer: ResMut<TopLayer>,
+) {
+    for (_, mut xform) in &mut sprites {
+        //TODO:: Z, There's a bug here because we keep calling top_layer.top() which is going to be a problem
+        //in the future.
+        xform.translation = xform.translation.truncate().extend(top_layer.top());
+    }
+}
+
+fn handle_sprite_drag(
     mut mouse_moved_event: EventReader<CursorMoved>,
     mut sprites: Query<(&Dragging, &mut Transform), With<Sprite>>,
-    mut top_layer: ResMut<TopLayer>,
 ) {
     let Some(motion) = mouse_moved_event.iter().last() else {return};
 
     for (dragging, mut xform) in &mut sprites {
         //TODO:: Z, There's a bug here because we keep calling top_layer.top() which is going to be a problem
         //in the future.
-        xform.translation = (motion.position + dragging.offset).extend(top_layer.top());
+        xform.translation = (motion.position + dragging.offset).extend(xform.translation.z);
     }
 }
 
