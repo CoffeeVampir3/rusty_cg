@@ -3,30 +3,27 @@ use bevy::utils::HashSet;
 use bevy_rapier2d::prelude::RapierContext;
 pub struct SpriteInteractionPlugin;
 
+//Use state when dragging to avoid race conditions?
+
 impl Plugin for SpriteInteractionPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<ClickEvent>()
+        app.add_event::<ClickEvent>()
             .add_event::<DragBeginEvent>()
             .add_event::<DragEndEvent>()
             .add_event::<DropEvent>()
             .add_event::<HoveringEvent>()
             .add_event::<HoverBeginEvent>()
             .add_event::<HoverEndEvent>()
-
-            .add_system_to_stage(CoreStage::First, handle_sprite_mouse_interactions)
-            .add_system(handle_sprite_begin_drag)
-            .add_system(handle_sprite_drag)
-            .add_system(handle_sprite_hover_events)
-            .add_system_to_stage(CoreStage::Last, handle_sprite_end_drag)
-
-            .add_plugin(SpriteEventDebugPlugin)
-
-            ;
+            .add_system_to_stage(CoreStage::First, handle_mouse_interactions)
+            .add_system(handle_begin_drag)
+            .add_system(handle_drag)
+            .add_system(handle_hover_events)
+            .add_system_to_stage(CoreStage::Last, handle_end_drag)
+            .add_plugin(SpriteEventDebugPlugin);
     }
 }
 
-pub struct HoveringEvent{
+pub struct HoveringEvent {
     pub hover_pos: Vec2,
     pub ent: Entity,
 }
@@ -71,7 +68,7 @@ pub struct Dragging {
     pub start_pos: Vec3,
 }
 
-fn handle_sprite_mouse_interactions(
+fn handle_mouse_interactions(
     mut commands: Commands,
     button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
@@ -81,7 +78,9 @@ fn handle_sprite_mouse_interactions(
     rapier_context: Res<RapierContext>,
     mut hover_ev: EventWriter<HoveringEvent>,
 ) {
-    if dragging.iter().len() > 0 {return};
+    if dragging.iter().len() > 0 {
+        return;
+    };
     let Some(window) = windows.get_primary() else {return};
     let Some(cursor_point_system) = window.cursor_position() else {return};
     let cursor_point_game = helpers::get_window_relative_cursor_pos(&window);
@@ -99,7 +98,7 @@ fn handle_sprite_mouse_interactions(
             offset: cursor_offset,
             start_pos: position,
         });
-    
+
         click_ev.send(ClickEvent {
             click_pos: cursor_point_system,
             ent,
@@ -108,12 +107,12 @@ fn handle_sprite_mouse_interactions(
     }
 
     hover_ev.send(HoveringEvent {
-        ent:ent,
-        hover_pos: cursor_point_system
+        ent: ent,
+        hover_pos: cursor_point_system,
     });
 }
 
-fn handle_sprite_hover_events(
+fn handle_hover_events(
     mut commands: Commands,
     mut hover_persist_ev: EventReader<HoveringEvent>,
     mut hover_begin_ev: EventWriter<HoverBeginEvent>,
@@ -125,8 +124,10 @@ fn handle_sprite_hover_events(
         let ent = ev.ent;
         if current_hovers.get(ent).is_err() {
             commands.entity(ent).insert(HoveringOver);
-            hover_begin_ev.send(HoverBeginEvent { hover_pos: (ev.hover_pos), ent: (ent) });
-            continue;
+            hover_begin_ev.send(HoverBeginEvent {
+                hover_pos: (ev.hover_pos),
+                ent: (ent),
+            });
         } else {
             seen_hovers.insert(ent);
         }
@@ -141,18 +142,18 @@ fn handle_sprite_hover_events(
     }
 }
 
-fn handle_sprite_begin_drag(
-    mut sprites: Query<(Entity, &Dragging, &mut Transform), (With<Sprite>, Added<Dragging>)>,
+fn handle_begin_drag(
+    mut sprites: Query<(Entity, &mut Transform), (With<Sprite>, Added<Dragging>)>,
     mut top_layer: ResMut<TopLayer>,
-    mut begin_drag_ev: EventWriter<DragBeginEvent>
+    mut begin_drag_ev: EventWriter<DragBeginEvent>,
 ) {
-    for (ent, _, mut xform) in &mut sprites {
+    for (ent, mut xform) in &mut sprites {
         xform.translation = xform.translation.truncate().extend(top_layer.top());
-        begin_drag_ev.send(DragBeginEvent {ent})
+        begin_drag_ev.send(DragBeginEvent { ent })
     }
 }
 
-fn handle_sprite_drag(
+fn handle_drag(
     mut mouse_moved_event: EventReader<CursorMoved>,
     mut sprites: Query<(&Dragging, &mut Transform), With<Sprite>>,
 ) {
@@ -163,12 +164,12 @@ fn handle_sprite_drag(
     }
 }
 
-fn handle_sprite_end_drag(
+fn handle_end_drag(
     mut commands: Commands,
     button_input: Res<Input<MouseButton>>,
     dragged_entities: Query<(Entity, &Dragging)>,
     mut drop_ev: EventWriter<DropEvent>,
-    mut drag_end_ev: EventWriter<DragEndEvent>
+    mut drag_end_ev: EventWriter<DragEndEvent>,
 ) {
     if !button_input.just_released(MouseButton::Left) {
         return;
@@ -186,61 +187,49 @@ fn handle_sprite_end_drag(
 
 /************************************************************************
                                     Debug
-*************************************************************************/   
+*************************************************************************/
 
 pub struct SpriteEventDebugPlugin;
 
 impl Plugin for SpriteEventDebugPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_system(debug_hover_begin)
-        .add_system(debug_hover_end)
-        .add_system(debug_drag_begin)
-        .add_system(debug_drag_end)
-        .add_system(debug_click)
-        ;
+        app.add_system(debug_hover_begin)
+            .add_system(debug_hover_end)
+            .add_system(debug_drag_begin)
+            .add_system(debug_drag_end)
+            .add_system(debug_click);
     }
 }
 
-fn debug_hover_begin(
-    mut hover_begin_ev: EventReader<HoverBeginEvent>,
-) {
+fn debug_hover_begin(mut hover_begin_ev: EventReader<HoverBeginEvent>) {
     for ev in hover_begin_ev.iter() {
         let ent = ev.ent;
         println!("Began hovering over {ent:?}");
     }
 }
 
-fn debug_hover_end(
-    mut hover_end_ev: EventReader<HoverEndEvent>,
-) {
+fn debug_hover_end(mut hover_end_ev: EventReader<HoverEndEvent>) {
     for ev in hover_end_ev.iter() {
         let ent = ev.ent;
         println!("Ended hovering over {ent:?}");
     }
 }
 
-fn debug_drag_begin (
-    mut drag_begin_ev: EventReader<DragBeginEvent>,
-) {
+fn debug_drag_begin(mut drag_begin_ev: EventReader<DragBeginEvent>) {
     for ev in drag_begin_ev.iter() {
         let ent = ev.ent;
         println!("Began drag {ent:?}");
     }
 }
 
-fn debug_drag_end (
-    mut drag_end_ev: EventReader<DragEndEvent>,
-) {
+fn debug_drag_end(mut drag_end_ev: EventReader<DragEndEvent>) {
     for ev in drag_end_ev.iter() {
         let ent = ev.ent;
         println!("End drag {ent:?}");
     }
 }
 
-fn debug_click (
-    mut click_ev: EventReader<ClickEvent>,
-) {
+fn debug_click(mut click_ev: EventReader<ClickEvent>) {
     for ev in click_ev.iter() {
         let ent = ev.ent;
         println!("Clicked {ent:?}");

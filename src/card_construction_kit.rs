@@ -4,8 +4,7 @@ pub struct CardConstructionKitPlugin;
 
 impl Plugin for CardConstructionKitPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_startup_system(initialize_construction_config)
+        app.add_startup_system(initialize_construction_config)
             .add_startup_system(test_initialize)
             .add_system(run_construction);
     }

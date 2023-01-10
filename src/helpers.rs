@@ -1,6 +1,6 @@
-use bevy::{prelude::*, window::Window};
-use bevy_rapier2d::prelude::{RapierContext, QueryFilter};
 use crate::*;
+use bevy::{prelude::*, window::Window};
+use bevy_rapier2d::prelude::{QueryFilter, RapierContext};
 
 pub fn get_window_relative_cursor_pos(wnd: &Window) -> Vec2 {
     let cursor_pos = wnd.cursor_position().unwrap();
@@ -14,9 +14,9 @@ pub fn get_window_relative_cursor_pos(wnd: &Window) -> Vec2 {
 }
 
 pub fn pointcast_2d<'a>(
-    rapier_context: &RapierContext, 
-    cursor_point_game: Vec2, 
-    sprites: &'a Query<(Entity, &GlobalTransform), (With<Sprite>, Without<Dragging>)>
+    rapier_context: &RapierContext,
+    cursor_point_game: Vec2,
+    sprites: &'a Query<(Entity, &GlobalTransform), (With<Sprite>, Without<Dragging>)>,
 ) -> Option<(Entity, &'a GlobalTransform)> {
     let mut max = f32::NEG_INFINITY;
     let mut res: Option<(Entity, &GlobalTransform)> = None;

@@ -1,5 +1,5 @@
-use bevy::text::Text2dBounds;
 pub use crate::*;
+use bevy::text::Text2dBounds;
 
 pub trait Construct {
     type ConstructedType: Bundle;

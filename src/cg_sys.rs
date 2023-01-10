@@ -3,7 +3,8 @@ pub struct CGSys;
 
 impl Plugin for CGSys {
     fn build(&self, app: &mut App) {
-        app.add_plugin(SpriteInteractionPlugin).add_system(sprite_on_drop);
+        app.add_plugin(SpriteInteractionPlugin)
+            .add_system(sprite_on_drop);
     }
 }
 
@@ -34,8 +35,8 @@ fn sprite_on_drop(
         });
 
         let Ok((_, mut xform)) = sprites.get_mut(ev.ent) else {continue};
-        let Some((drop_entity, drop_target)): Option<(Entity, Vec3)> = 
-        res 
+        let Some((drop_entity, drop_target)): Option<(Entity, Vec3)> =
+        res
         else {
             xform.translation = ev.drag_info.start_pos;
             continue;

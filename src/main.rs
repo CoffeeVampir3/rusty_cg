@@ -1,9 +1,9 @@
+mod card_components;
 mod card_construction_kit;
 mod cg_sys;
 mod helpers;
 mod sprite_interaction_plugin;
 mod sprite_layers;
-mod card_components;
 pub use card_construction_kit::*;
 pub use cg_sys::*;
 pub use sprite_interaction_plugin::*;
@@ -42,11 +42,13 @@ impl Plugin for CGCorePlugin {
 }
 
 fn ui_example(mut egui_context: ResMut<EguiContext>) {
-    egui::Window::new("Hello").title_bar(false).resizable(false).fixed_pos(egui::Pos2::new(640.0, 360.0))
-    
-    .show(egui_context.ctx_mut(), |ui| {
-        ui.label("This is a card description peepo poggers");
-    });
+    egui::Window::new("Hello")
+        .title_bar(false)
+        .resizable(false)
+        .fixed_pos(egui::Pos2::new(640.0, 360.0))
+        .show(egui_context.ctx_mut(), |ui| {
+            ui.label("This is a card description peepo poggers");
+        });
 }
 
 fn setup(mut commands: Commands) {
