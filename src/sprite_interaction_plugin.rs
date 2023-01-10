@@ -1,9 +1,9 @@
 pub use crate::*;
 use bevy::utils::HashSet;
 use bevy_rapier2d::prelude::RapierContext;
-pub struct SpriteDragDrop;
+pub struct SpriteInteractionPlugin;
 
-impl Plugin for SpriteDragDrop {
+impl Plugin for SpriteInteractionPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<ClickEvent>()
             .add_event::<DropEvent>()

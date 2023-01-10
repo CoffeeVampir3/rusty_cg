@@ -3,7 +3,7 @@ pub struct CGSys;
 
 impl Plugin for CGSys {
     fn build(&self, app: &mut App) {
-        app.add_plugin(SpriteDragDrop).add_system(sprite_on_drop);
+        app.add_plugin(SpriteInteractionPlugin).add_system(sprite_on_drop);
     }
 }
 
