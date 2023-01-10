@@ -1,12 +1,12 @@
 mod card_construction_kit;
 mod cg_sys;
 mod helpers;
-mod sprite_drag_drop;
+mod sprite_interaction_plugin;
 mod sprite_layers;
 mod card_components;
 pub use card_construction_kit::*;
 pub use cg_sys::*;
-pub use sprite_drag_drop::*;
+pub use sprite_interaction_plugin::*;
 pub use sprite_layers::*;
 
 use bevy::prelude::*;
