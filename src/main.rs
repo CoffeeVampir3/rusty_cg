@@ -1,15 +1,18 @@
-mod cardconstructionkit;
-mod cgsys;
+mod card_construction_kit;
+mod cg_sys;
 mod helpers;
-mod spritedragdrop;
-mod spritelayers;
-pub use cardconstructionkit::*;
-pub use cgsys::*;
-pub use spritedragdrop::*;
-pub use spritelayers::*;
+mod sprite_drag_drop;
+mod sprite_layers;
+mod card_components;
+pub use card_construction_kit::*;
+pub use cg_sys::*;
+pub use sprite_drag_drop::*;
+pub use sprite_layers::*;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+
+use bevy_egui::*;
 
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_inspector_egui_rapier::*;
@@ -19,12 +22,14 @@ fn main() {
         .add_plugins(DefaultPlugins)
         //.add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugin(InspectableRapierPlugin)
-        .add_plugin(WorldInspectorPlugin)
+        //.add_plugin(InspectableRapierPlugin)
+        //.add_plugin(WorldInspectorPlugin)
+        .add_plugin(EguiPlugin)
         .add_plugin(SpriteLayerSystem)
         .add_plugin(CGCorePlugin)
         .add_plugin(CGSys)
         .add_plugin(CardConstructionKitPlugin)
+        .add_system(ui_example)
         .run();
 }
 
@@ -36,7 +41,15 @@ impl Plugin for CGCorePlugin {
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut top_layer: ResMut<TopLayer>) {
+fn ui_example(mut egui_context: ResMut<EguiContext>) {
+    egui::Window::new("Hello").title_bar(false).resizable(false).fixed_pos(egui::Pos2::new(640.0, 360.0))
+    
+    .show(egui_context.ctx_mut(), |ui| {
+        ui.label("This is a card description peepo poggers");
+    });
+}
+
+fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
     let test_drop_zone = SpriteBundle {
@@ -55,8 +68,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut top_layer: 
         ..default()
     };
 
-    commands
-        .spawn(test_drop_zone)
-        .insert(Collider::cuboid(400.0, 100.0))
-        .insert(Sensor);
+    // commands
+    //     .spawn(test_drop_zone)
+    //     .insert(Collider::cuboid(400.0, 100.0))
+    //     .insert(Sensor);
 }
