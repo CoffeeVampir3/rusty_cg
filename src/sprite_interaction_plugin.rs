@@ -168,8 +168,6 @@ fn handle_sprite_drag(
     let Some(motion) = mouse_moved_event.iter().last() else {return};
 
     for (dragging, mut xform) in &mut sprites {
-        //TODO:: Z, There's a bug here because we keep calling top_layer.top() which is going to be a problem
-        //in the future.
         xform.translation = (motion.position + dragging.offset).extend(xform.translation.z);
     }
 }
