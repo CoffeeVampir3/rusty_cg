@@ -2,11 +2,11 @@ mod card_components;
 mod card_construction_kit;
 mod cg_sys;
 mod helpers;
-mod sprite_interaction_plugin;
+mod sprite_interactions;
 mod sprite_layers;
 pub use card_construction_kit::*;
 pub use cg_sys::*;
-pub use sprite_interaction_plugin::*;
+pub use sprite_interactions::*;
 pub use sprite_layers::*;
 
 use bevy::prelude::*;

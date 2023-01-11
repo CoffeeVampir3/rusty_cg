@@ -44,30 +44,6 @@ fn test_initialize(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(CardDescription {
             desc: "Hello World".to_string(),
         });
-
-    commands
-        .spawn(Card {
-            texture: asset_server.load("test/whatever.png"),
-        })
-        .insert(CardDescription {
-            desc: "Hello World2".to_string(),
-        });
-
-    commands
-        .spawn(Card {
-            texture: asset_server.load("test/whatever.png"),
-        })
-        .insert(CardDescription {
-            desc: "Hello World3".to_string(),
-        });
-
-    commands
-        .spawn(Card {
-            texture: asset_server.load("test/whatever.png"),
-        })
-        .insert(CardDescription {
-            desc: "Hello World4".to_string(),
-        });
 }
 
 fn run_construction(
@@ -85,7 +61,8 @@ fn run_construction(
                 card_config.card_width / 2.0,
                 card_config.card_height / 2.0,
             ))
-            .insert(Sensor);
+            .insert(Sensor)
+            .insert(Interactable::default());
 
         if desc.is_some() {
             let desc = desc.unwrap();

@@ -16,7 +16,7 @@ pub fn get_window_relative_cursor_pos(wnd: &Window) -> Vec2 {
 pub fn pointcast_2d<'a>(
     rapier_context: &RapierContext,
     cursor_point_game: Vec2,
-    sprites: &'a Query<(Entity, &GlobalTransform), (With<Sprite>, Without<Dragging>)>,
+    sprites: &'a Query<(Entity, &GlobalTransform), With<Sprite>>,
 ) -> Option<(Entity, &'a GlobalTransform)> {
     let mut max = f32::NEG_INFINITY;
     let mut res: Option<(Entity, &GlobalTransform)> = None;

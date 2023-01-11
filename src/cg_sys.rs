@@ -3,11 +3,11 @@ pub struct CGSys;
 
 impl Plugin for CGSys {
     fn build(&self, app: &mut App) {
-        app.add_plugin(SpriteInteractionPlugin)
-            .add_system(sprite_on_drop);
+        app.add_plugin(SpriteInteractionPlugin);
     }
 }
 
+/*
 fn sprite_on_drop(
     mut sprites: Query<(Entity, &mut Transform), With<Sprite>>,
     immut_sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
@@ -46,3 +46,4 @@ fn sprite_on_drop(
         //xform.translation = drop_target.truncate().extend(xform.translation.z);
     }
 }
+*/
