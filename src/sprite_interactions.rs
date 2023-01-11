@@ -7,19 +7,21 @@ pub struct SpriteInteractionPlugin;
 impl Plugin for SpriteInteractionPlugin {
     fn build(&self, app: &mut App) {
         app
-        .add_system(clear_drags.before(handle_mouse_interactions))
-        .add_system(handle_mouse_interactions)
-
-        .add_system(test_interactions)
-        ;
+            .add_system(clear_drags.before(handle_mouse_interactions))
+            .add_system(handle_mouse_interactions)
+            .add_system(test_interactions)
+            
+            ;
     }
 }
 
-fn test_interactions( 
-    interactables: Query<(Entity, &Interactable), Changed<Interactable>>
-) {
+fn test_interactions(interactables: Query<(Entity, &Interactable), Changed<Interactable>>) {
     for (e, interactable) in &interactables {
-        println!("{e:?} changed interaction state to {:?} from {:?}", interactable.current(), interactable.previous());
+        println!(
+            "{e:?} changed interaction state to {:?} from {:?}",
+            interactable.current(),
+            interactable.previous()
+        );
     }
 }
 
@@ -42,7 +44,12 @@ pub struct Interactable {
 }
 
 impl Interactable {
-    pub fn default() -> Self { Self { state:Interaction::None, previous_state:Interaction::None} }
+    pub fn default() -> Self {
+        Self {
+            state: Interaction::None,
+            previous_state: Interaction::None,
+        }
+    }
 
     pub fn current(&self) -> &Interaction {
         &self.state
@@ -51,29 +58,26 @@ impl Interactable {
         &self.previous_state
     }
     fn change(&mut self, new_state: Interaction) {
-        self.previous_state = self.state.clone();
+        std::mem::swap(&mut self.previous_state, &mut self.state);
         self.state = new_state;
     }
 }
 
 fn clear_drags(
     button_input: Res<Input<MouseButton>>,
-    mut interactables: Query<(Entity, &mut Interactable)>
+    mut interactables: Query<&mut Interactable>,
 ) {
     if button_input.just_released(MouseButton::Left) {
-        for (ent, mut interactable) in interactables.iter_mut() {
+        for mut interactable in interactables.iter_mut() {
             match interactable.current() {
-                Interaction::None => (),
-                Interaction::Hovering => (),
-                Interaction::Dragging { offset, start_pos } => {
-                    println!("Drag ended {ent:?}.");
+                Interaction::Dragging {offset: _,start_pos: _} => {
                     interactable.change(Interaction::None);
                 }
+                _ => (),
             }
         }
     }
 }
-
 
 fn handle_mouse_interactions(
     button_input: Res<Input<MouseButton>>,
@@ -96,40 +100,40 @@ fn handle_mouse_interactions(
             continue;
         }
         match hit_result {
+            //Did we hit an entity and it matches our current iterator?
             Some((hit_ent, hit_xform)) if hit_ent == ent => {
-                //This is the case where we hit an entity and it matches our current iterator.
                 match interactable.current() {
                     Interaction::None => {
-                        //Begin Hovering.
-                        println!("Hover Begin {ent:?}");
                         interactable.change(Interaction::Hovering);
                     }
+
                     Interaction::Hovering => {
                         if left_just_pressed {
                             let position = hit_xform.translation();
                             let sprite_position = position.truncate();
                             let cursor_offset = sprite_position - cursor_point_system;
-                            //Begin Drag
-                            println!("Drag started {ent:?}");  //TODO:: Drag Begin
-                            interactable.change(Interaction::Dragging{
+
+                            interactable.change(Interaction::Dragging {
                                 offset: cursor_offset,
                                 start_pos: position,
                             });
                         }
                     }
-                    Interaction::Dragging { offset, start_pos } => (), //Dragging Action
+
+                    _ => (), //Dragging Action
                 }
-            },
+            }
             _ => {
-                match *interactable.current()  {
-                    Interaction::None => (),
+                match interactable.current() {
+                    //This is the case where we were previously hovering over something but are no longer.
                     Interaction::Hovering => {
                         println!("Hover Ended {ent:?}");
                         interactable.change(Interaction::None);
                     }
-                    Interaction::Dragging { offset, start_pos } => (),
+
+                    _ => (),
                 }
-            },
+            }
         }
     }
 }
