@@ -7,25 +7,74 @@ pub struct SpriteInteractionPlugin;
 impl Plugin for SpriteInteractionPlugin {
     fn build(&self, app: &mut App) {
         app
+            .add_event::<ClickEvent>()
             .add_system(clear_drags.before(handle_mouse_interactions))
             .add_system(handle_mouse_interactions)
-            .add_system(test_interactions)
+
+            .add_system(drag_sprite)
+            .add_system(drop_sprite)
+
+            .add_system(interaction_debugger)
+            .add_system(click_debugger)
             
             ;
     }
 }
 
-fn test_interactions(interactables: Query<(Entity, &Interactable), Changed<Interactable>>) {
+fn click_debugger(
+    mut click_reader: EventReader<ClickEvent>
+) {
+    for ev in click_reader.iter() {
+        println!("Clicked: {:?}", ev.clicked_ent);
+    }
+}
+
+fn interaction_debugger(interactables: Query<(Entity, &Interactable), Changed<Interactable>>) {
     for (e, interactable) in &interactables {
         println!(
-            "{e:?} changed interaction state to {:?} from {:?}",
-            interactable.current(),
-            interactable.previous()
+            "Interacted with {e:?}: {:?} -> {:?}",
+            interactable.previous(),
+            interactable.current()
         );
     }
 }
 
-#[derive(Reflect, Clone, Default, PartialEq, Debug)]
+fn drag_sprite(
+    mut interactables: Query<(Entity, &mut Transform, &Interactable)>,
+    windows: Res<Windows>,
+) {
+    let Some(window) = windows.get_primary() else {return;};
+    let Some(cursor_point_system) = window.cursor_position() else {return;};
+
+    for (_, mut xform, interact) in interactables.iter_mut() {
+        match interact.current() {
+            Interaction::Dragging { offset, start_pos:_ } => {
+                xform.translation = (cursor_point_system + *offset).extend(xform.translation.z);
+            }
+            _ => ()
+        }
+    }
+}
+
+fn drop_sprite(
+    mut interactables: Query<(Entity, &mut Transform, &mut Interactable), Changed<Interactable>>,
+) {
+    for (_, mut xform, interact) in interactables.iter_mut() {
+        match interact.previous() {
+            Interaction::Dragging { start_pos,..} => {
+                xform.translation = *start_pos;
+            }
+            _ => ()
+        }
+    }
+}
+
+pub struct ClickEvent {
+    pub clicked_ent: Entity,
+    pub clicked_pos: Vec2
+}
+
+#[derive(Reflect, Clone, Default, PartialEq)]
 pub enum Interaction {
     #[default]
     None,
@@ -36,21 +85,33 @@ pub enum Interaction {
     },
 }
 
-#[derive(Reflect, Component, Clone, Default, PartialEq, Debug)]
+impl std::fmt::Debug for Interaction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::None => write!(f, "None"),
+            Self::Hovering => write!(f, "Hovering"),
+            Self::Dragging {..} => write!(f, "Dragging"),
+        }
+    }
+}
+
+#[derive(Reflect, Component, Clone, PartialEq, Debug)]
 #[reflect(Component)]
 pub struct Interactable {
     state: Interaction,
     previous_state: Interaction,
 }
 
-impl Interactable {
-    pub fn default() -> Self {
+impl Default for Interactable {
+    fn default() -> Self {
         Self {
             state: Interaction::None,
             previous_state: Interaction::None,
         }
     }
+}
 
+impl Interactable {
     pub fn current(&self) -> &Interaction {
         &self.state
     }
@@ -70,7 +131,7 @@ fn clear_drags(
     if button_input.just_released(MouseButton::Left) {
         for mut interactable in interactables.iter_mut() {
             match interactable.current() {
-                Interaction::Dragging {offset: _,start_pos: _} => {
+                Interaction::Dragging { .. } => {
                     interactable.change(Interaction::None);
                 }
                 _ => (),
@@ -85,6 +146,7 @@ fn handle_mouse_interactions(
     mut interactables: Query<(Entity, &mut Interactable)>,
     sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
     rapier_context: Res<RapierContext>,
+    mut click_writer: EventWriter<ClickEvent>
 ) {
     let Some(window) = windows.get_primary() else {return;};
     let Some(cursor_point_system) = window.cursor_position() else {return;};
@@ -113,6 +175,8 @@ fn handle_mouse_interactions(
                             let sprite_position = position.truncate();
                             let cursor_offset = sprite_position - cursor_point_system;
 
+                            click_writer.send(ClickEvent { clicked_ent: ent, clicked_pos: cursor_point_game});
+
                             interactable.change(Interaction::Dragging {
                                 offset: cursor_offset,
                                 start_pos: position,
@@ -120,14 +184,13 @@ fn handle_mouse_interactions(
                         }
                     }
 
-                    _ => (), //Dragging Action
+                    _ => (),
                 }
             }
             _ => {
                 match interactable.current() {
                     //This is the case where we were previously hovering over something but are no longer.
                     Interaction::Hovering => {
-                        println!("Hover Ended {ent:?}");
                         interactable.change(Interaction::None);
                     }
 
