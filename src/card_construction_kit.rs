@@ -1,12 +1,14 @@
 pub use crate::*;
 pub use card_components::*;
-pub struct CardConstructionKitPlugin;
 
+pub struct CardConstructionKitPlugin;
 impl Plugin for CardConstructionKitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(initialize_construction_config)
-            .add_startup_system(test_initialize)
-            .add_system(run_construction);
+        app
+            .register_type::<Card>()
+            .register_type::<CardDescription>()
+            .add_startup_system(initialize_construction_config)
+            .add_startup_system_to_stage(StartupStage::PostStartup, test);
     }
 }
 
@@ -36,43 +38,25 @@ fn initialize_construction_config(mut commands: Commands, asset_server: Res<Asse
     });
 }
 
-fn test_initialize(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn(Card {
-            texture: asset_server.load("test/whatever.png"),
-        })
-        .insert(CardDescription {
-            desc: "Hello World".to_string(),
-        });
-}
-
-fn run_construction(
-    mut commands: Commands,
-    unconstructed_cards: Query<(Entity, &Card, Option<&CardDescription>)>,
-    card_config: Res<CardConstructionConfig>,
+fn test(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>,
+    card_config: Res<CardConstructionConfig>
 ) {
-    for (ent, card, desc) in &unconstructed_cards {
-        commands.entity(ent).despawn_recursive();
+    let tex = asset_server.load("test/whatever.png");
 
-        let mut spawned = commands.spawn(card.construct(card_config.as_ref()));
-        spawned
-            .insert(Name::new("test_sprite"))
-            .insert(Collider::cuboid(
-                card_config.card_width / 2.0,
-                card_config.card_height / 2.0,
-            ))
-            .insert(Sensor)
-            .insert(Interactable::default());
+    let card = CardConstructor {texture: tex};
+    let desc = CardDescriptionConstructor {description: CardDescription{desc: "Hello World".to_string()}};
 
-        if desc.is_some() {
-            let desc = desc.unwrap();
-            let comp = desc.construct(card_config.as_ref());
+    let mut initial = commands.spawn_empty();
 
-            spawned.with_children(|x| {
-                x.spawn(comp).insert(Name::new("card description"));
-            });
-        }
+    card.construct(&mut initial, &card_config);
+    desc.construct(&mut initial, &card_config);
 
-        println!("Constructed a card {ent:?}");
-    }
+    let mut initial = commands.spawn_empty();
+
+    card.construct(&mut initial, &card_config);
+    desc.construct(&mut initial, &card_config);
+
+    initial.insert(Name::new("This Is a Different Name"));
 }

@@ -2,17 +2,17 @@ pub use crate::*;
 use bevy_rapier2d::prelude::RapierContext;
 pub struct SpriteInteractionPlugin;
 
-//Use state when dragging to avoid race conditions?
-
 impl Plugin for SpriteInteractionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<ClickEvent>()
+        app
+            .add_event::<ClickEvent>()
             .add_system(clear_drags.before(handle_mouse_interactions))
             .add_system(handle_mouse_interactions)
             .add_system(drag_sprite)
             .add_system(drop_sprite)
-            .add_system(interaction_debugger)
-            .add_system(click_debugger);
+
+            .add_system(process_hovering)
+            ;
     }
 }
 
@@ -29,6 +29,30 @@ fn interaction_debugger(interactables: Query<(Entity, &Interactable), Changed<In
             interactable.previous(),
             interactable.current()
         );
+    }
+}
+
+fn process_hovering(
+    windows: Res<Windows>,
+    interactables: Query<(Entity, &GlobalTransform, &Interactable)>,
+    mut egui_context: ResMut<EguiContext>
+) {
+    let Some(window) = windows.get_primary() else {return;};
+    let Some(cursor_point_system) = window.cursor_position() else {return;};
+
+    for (_, _, interact) in &interactables {
+        match interact.current() {
+            Interaction::Hovering => {
+                egui::Window::new("Hello")
+                .title_bar(false)
+                .resizable(false)
+                .fixed_pos(egui::Pos2::new(cursor_point_system.x, window.height() - cursor_point_system.y))
+                .show(egui_context.ctx_mut(), |ui| {
+                    ui.label("This is a card description peepo poggers");
+                });
+            }
+            _ => ()
+        }         
     }
 }
 
@@ -59,22 +83,27 @@ fn drop_sprite(
     rapier_context: Res<RapierContext>,
 ) {
     let Some(window) = windows.get_primary() else {return;};
-    let Some(cursor_point_game) = helpers::get_window_relative_cursor_pos(&window) else {return};
+    let cursor_point_game = helpers::get_window_relative_cursor_pos(&window);
 
     for (ent, mut xform, interact) in interactables.iter_mut() {
         let filter = QueryFilter::default().exclude_collider(ent);
-        let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, filter);
-        let Some((_, gxform)) = hit_result
-        else {
-            match interact.previous() {
-                Interaction::Dragging { start_pos, .. } => {
-                    xform.translation = *start_pos;
+        if cursor_point_game.is_some() {
+            let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game.unwrap(), &sprites, filter);
+            match hit_result {
+                Some((_, gxform)) => {
+                    xform.translation = gxform.translation().truncate().extend(xform.translation.z);
+                    continue;
                 }
-                _ => (),
-            };
-            continue;
+                None => (),
+            }
+        }
+        //Failed to drop on something, return to previous position.
+        match interact.previous() {
+            Interaction::Dragging { start_pos, .. } => {
+                xform.translation = *start_pos;
+            }
+            _ => (),
         };
-        xform.translation = gxform.translation().truncate().extend(xform.translation.z);
     }
 }
 

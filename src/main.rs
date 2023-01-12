@@ -22,14 +22,13 @@ fn main() {
         .add_plugins(DefaultPlugins)
         //.add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        //.add_plugin(InspectableRapierPlugin)
-        //.add_plugin(WorldInspectorPlugin)
-        .add_plugin(EguiPlugin)
+        .add_plugin(InspectableRapierPlugin)
+        .add_plugin(WorldInspectorPlugin)
+        //.add_plugin(EguiPlugin)
         .add_plugin(SpriteLayerSystem)
         .add_plugin(CGCorePlugin)
-        .add_plugin(CGSys)
         .add_plugin(CardConstructionKitPlugin)
-        .add_system(ui_example)
+        .add_plugin(CGSys)
         .run();
 }
 
@@ -39,16 +38,6 @@ impl Plugin for CGCorePlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup);
     }
-}
-
-fn ui_example(mut egui_context: ResMut<EguiContext>) {
-    egui::Window::new("Hello")
-        .title_bar(false)
-        .resizable(false)
-        .fixed_pos(egui::Pos2::new(640.0, 360.0))
-        .show(egui_context.ctx_mut(), |ui| {
-            ui.label("This is a card description peepo poggers");
-        });
 }
 
 fn setup(mut commands: Commands) {
