@@ -13,8 +13,8 @@ impl Plugin for SpriteInteractionPlugin {
 
             .add_system(process_hovering)
 
-            .add_system(click_debugger)
-            .add_system(interaction_debugger)
+            //.add_system(click_debugger)
+            //.add_system(interaction_debugger)
             ;
     }
 }
@@ -76,24 +76,23 @@ fn drop(
     mut layer_sys: ResMut<TopLayer>
 ) {
     let Some(window) = windows.get_primary() else {return;};
-    let Some(cursor_point_system) = window.cursor_position() else {return;};
+    let cursor_point_system_opt = window.cursor_position();
     let cursor_point_game_opt = helpers::get_window_relative_cursor_pos(&window);
 
     for (ent, mut xform, interact) in interactables.iter_mut() {
+        println!("{:?}", interact);
         if let Interaction::Dragging{start_pos,offset} = interact.previous() {
-
             let filter = QueryFilter::default().exclude_collider(ent);
             //If the cursor is in our window, and we hit something that isin't what we dropped, drop it onto the hit position.
-            if let Some(cursor_point_game) = cursor_point_game_opt {
+            if let (Some(cursor_point_game), Some(cursor_point_system)) = (cursor_point_game_opt, cursor_point_system_opt) {
                 let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, filter);
-                if let Some((_, gxform)) = hit_result {
+                if let Some((..)) = hit_result {
                     xform.translation = (cursor_point_system+*offset).extend(xform.translation.z);
                     continue;
                 }
             }
-            
-            //Failed to drop on something, return to previous position.
             xform.translation = *start_pos;
+            //Failed to drop on something, return to previous position.
         } else if let Interaction::Dragging{..} = interact.current() {
             //Begin drag
             xform.translation = xform.translation.truncate().extend(layer_sys.top());
