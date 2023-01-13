@@ -44,21 +44,23 @@ fn test(
     asset_server: Res<AssetServer>,
     card_config: Res<CardConstructionConfig>
 ) {
-    let tex = asset_server.load("test/whatever.png");
+    let asuka_tex = asset_server.load("test/whatever.png");
+    let kekw_tex = asset_server.load("test/kekw.png");
 
-    let card = CardConstructor {texture: tex};
+    let asuka_card = CardConstructor {texture: asuka_tex};
+    let kekw_card = CardConstructor {texture: kekw_tex};
     let desc = CardDescriptionConstructor {description: CardDescription{desc: "Hello World".to_string()}};
     let cost = CardCostConstructor {cost: CardCost{cost:5}};
 
     let mut initial = commands.spawn_empty();
 
-    card.construct(&mut initial, &card_config);
+    asuka_card.construct(&mut initial, &card_config);
     desc.construct(&mut initial, &card_config);
     cost.construct(&mut initial, &card_config);
 
     let mut initial = commands.spawn_empty();
 
-    card.construct(&mut initial, &card_config);
+    kekw_card.construct(&mut initial, &card_config);
     desc.construct(&mut initial, &card_config);
 
     initial.insert(Name::new("This Is a Different Name"));

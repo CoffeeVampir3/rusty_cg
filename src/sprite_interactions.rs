@@ -9,7 +9,7 @@ impl Plugin for SpriteInteractionPlugin {
             .add_system(clear_drags.before(handle_mouse_interactions))
             .add_system(handle_mouse_interactions)
             .add_system(drag)
-            .add_system(drop)
+            .add_system(handle_dragging_changes)
 
             .add_system(process_hovering)
 
@@ -68,7 +68,7 @@ fn drag(
     }
 }
 
-fn drop(
+fn handle_dragging_changes(
     mut interactables: Query<(Entity, &mut Transform, &mut Interactable), Changed<Interactable>>,
     sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
     windows: Res<Windows>,
@@ -80,10 +80,13 @@ fn drop(
     let cursor_point_game_opt = helpers::get_window_relative_cursor_pos(&window);
 
     for (ent, mut xform, interact) in interactables.iter_mut() {
-        println!("{:?}", interact);
+        if let Interaction::Dragging{..} = interact.current() {
+            //Begin drag
+            xform.translation = xform.translation.truncate().extend(layer_sys.top());
+        } else 
         if let Interaction::Dragging{start_pos,offset} = interact.previous() {
             let filter = QueryFilter::default().exclude_collider(ent);
-            //If the cursor is in our window, and we hit something that isin't what we dropped, drop it onto the hit position.
+            //If the cursor is in our window, and we hit something that isin't what we dropped, drop it onto the cursor.
             if let (Some(cursor_point_game), Some(cursor_point_system)) = (cursor_point_game_opt, cursor_point_system_opt) {
                 let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, filter);
                 if let Some((..)) = hit_result {
@@ -91,11 +94,8 @@ fn drop(
                     continue;
                 }
             }
-            xform.translation = *start_pos;
             //Failed to drop on something, return to previous position.
-        } else if let Interaction::Dragging{..} = interact.current() {
-            //Begin drag
-            xform.translation = xform.translation.truncate().extend(layer_sys.top());
+            xform.translation = *start_pos;
         }
     }
 }

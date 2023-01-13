@@ -59,8 +59,8 @@ fn setup(mut commands: Commands) {
         ..default()
     };
 
-    // commands
-    //     .spawn(test_drop_zone)
-    //     .insert(Collider::cuboid(400.0, 100.0))
-    //     .insert(Sensor);
+    commands
+        .spawn(test_drop_zone)
+        .insert(Collider::cuboid(400.0, 100.0))
+        .insert(Sensor);
 }
