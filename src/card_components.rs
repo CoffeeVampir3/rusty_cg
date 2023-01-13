@@ -24,7 +24,7 @@ impl Constructable for CardConstructor {
             ..default()
         };
 
-        cmds.insert(Card);
+        cmds.insert(Card.clone());
         cmds.insert(bun)
         .insert(Name::new("Card"))
         .insert(Collider::cuboid(
@@ -65,6 +65,39 @@ impl Constructable for CardDescriptionConstructor {
         cmds.insert(self.description.clone());
         cmds.with_children(|x| {
             x.spawn(a).insert(Name::new("Description"));
+        });
+    }
+}
+
+#[derive(Default)]
+pub struct CardCostConstructor {
+    pub cost: CardCost,
+}
+#[derive(Reflect, Component, Default, Clone)]
+pub struct CardCost {
+    pub cost: u32,
+}
+impl Constructable for CardCostConstructor {
+    fn construct(&self, cmds: &mut EntityCommands, card_config: &CardConstructionConfig) {
+        let a = Text2dBundle {
+            text: Text::from_section(self.cost.cost.to_string(), card_config.text_style.clone())
+                .with_alignment(card_config.text_alignment),
+            transform: Transform::from_xyz(
+                card_config.card_width / 4.0,
+                card_config.card_height / 3.0,
+                card_config.magic_number,
+            ),
+            text_2d_bounds: Text2dBounds {
+                size: Vec2 {
+                    x: card_config.card_width,
+                    y: card_config.card_height,
+                },
+            },
+            ..default()
+        };
+        cmds.insert(self.cost.clone());
+        cmds.with_children(|x| {
+            x.spawn(a).insert(Name::new("Cost"));
         });
     }
 }

@@ -7,6 +7,7 @@ impl Plugin for CardConstructionKitPlugin {
         app
             .register_type::<Card>()
             .register_type::<CardDescription>()
+            .register_type::<CardCost>()
             .add_startup_system(initialize_construction_config)
             .add_startup_system_to_stage(StartupStage::PostStartup, test);
     }
@@ -47,11 +48,13 @@ fn test(
 
     let card = CardConstructor {texture: tex};
     let desc = CardDescriptionConstructor {description: CardDescription{desc: "Hello World".to_string()}};
+    let cost = CardCostConstructor {cost: CardCost{cost:5}};
 
     let mut initial = commands.spawn_empty();
 
     card.construct(&mut initial, &card_config);
     desc.construct(&mut initial, &card_config);
+    cost.construct(&mut initial, &card_config);
 
     let mut initial = commands.spawn_empty();
 

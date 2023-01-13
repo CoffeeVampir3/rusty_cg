@@ -8,10 +8,13 @@ impl Plugin for SpriteInteractionPlugin {
             .add_event::<ClickEvent>()
             .add_system(clear_drags.before(handle_mouse_interactions))
             .add_system(handle_mouse_interactions)
-            .add_system(drag_sprite)
-            .add_system(drop_sprite)
+            .add_system(drag)
+            .add_system(drop)
 
             .add_system(process_hovering)
+
+            .add_system(click_debugger)
+            .add_system(interaction_debugger)
             ;
     }
 }
@@ -41,22 +44,18 @@ fn process_hovering(
     let Some(cursor_point_system) = window.cursor_position() else {return;};
 
     for (_, _, interact) in &interactables {
-        match interact.current() {
-            Interaction::Hovering => {
-                egui::Window::new("Hello")
-                .title_bar(false)
-                .resizable(false)
-                .fixed_pos(egui::Pos2::new(cursor_point_system.x, window.height() - cursor_point_system.y))
-                .show(egui_context.ctx_mut(), |ui| {
-                    ui.label("This is a card description peepo poggers");
-                });
-            }
-            _ => ()
-        }         
+        let Interaction::Hovering = interact.current() else {continue};
+        egui::Window::new("Hello")
+        .title_bar(false)
+        .resizable(false)
+        .fixed_pos(egui::Pos2::new(cursor_point_system.x, window.height() - cursor_point_system.y))
+        .show(egui_context.ctx_mut(), |ui| {
+            ui.label("This is a card description peepo poggers");
+        });
     }
 }
 
-fn drag_sprite(
+fn drag(
     mut interactables: Query<(Entity, &mut Transform, &Interactable)>,
     windows: Res<Windows>,
 ) {
@@ -64,46 +63,41 @@ fn drag_sprite(
     let Some(cursor_point_system) = window.cursor_position() else {return;};
 
     for (_, mut xform, interact) in interactables.iter_mut() {
-        match interact.current() {
-            Interaction::Dragging {
-                offset,
-                start_pos: _,
-            } => {
-                xform.translation = (cursor_point_system + *offset).extend(xform.translation.z);
-            }
-            _ => (),
-        }
+        let Interaction::Dragging{offset,..} = interact.current() else {continue};
+        xform.translation = (cursor_point_system + *offset).extend(xform.translation.z);
     }
 }
 
-fn drop_sprite(
+fn drop(
     mut interactables: Query<(Entity, &mut Transform, &mut Interactable), Changed<Interactable>>,
     sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
     windows: Res<Windows>,
     rapier_context: Res<RapierContext>,
+    mut layer_sys: ResMut<TopLayer>
 ) {
     let Some(window) = windows.get_primary() else {return;};
-    let cursor_point_game = helpers::get_window_relative_cursor_pos(&window);
+    let Some(cursor_point_system) = window.cursor_position() else {return;};
+    let cursor_point_game_opt = helpers::get_window_relative_cursor_pos(&window);
 
     for (ent, mut xform, interact) in interactables.iter_mut() {
-        let filter = QueryFilter::default().exclude_collider(ent);
-        if cursor_point_game.is_some() {
-            let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game.unwrap(), &sprites, filter);
-            match hit_result {
-                Some((_, gxform)) => {
-                    xform.translation = gxform.translation().truncate().extend(xform.translation.z);
+        if let Interaction::Dragging{start_pos,offset} = interact.previous() {
+
+            let filter = QueryFilter::default().exclude_collider(ent);
+            //If the cursor is in our window, and we hit something that isin't what we dropped, drop it onto the hit position.
+            if let Some(cursor_point_game) = cursor_point_game_opt {
+                let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, filter);
+                if let Some((_, gxform)) = hit_result {
+                    xform.translation = (cursor_point_system+*offset).extend(xform.translation.z);
                     continue;
                 }
-                None => (),
             }
+            
+            //Failed to drop on something, return to previous position.
+            xform.translation = *start_pos;
+        } else if let Interaction::Dragging{..} = interact.current() {
+            //Begin drag
+            xform.translation = xform.translation.truncate().extend(layer_sys.top());
         }
-        //Failed to drop on something, return to previous position.
-        match interact.previous() {
-            Interaction::Dragging { start_pos, .. } => {
-                xform.translation = *start_pos;
-            }
-            _ => (),
-        };
     }
 }
 
@@ -165,12 +159,8 @@ impl Interactable {
 fn clear_drags(button_input: Res<Input<MouseButton>>, mut interactables: Query<&mut Interactable>) {
     if button_input.just_released(MouseButton::Left) {
         for mut interactable in interactables.iter_mut() {
-            match interactable.current() {
-                Interaction::Dragging { .. } => {
-                    interactable.change(Interaction::None);
-                }
-                _ => (),
-            }
+            let Interaction::Dragging{..} = interactable.current() else {continue};
+            interactable.change(Interaction::None);
         }
     }
 }
@@ -224,14 +214,8 @@ fn handle_mouse_interactions(
                 _ => (),
             },
             _ => {
-                match interactable.current() {
-                    //This is the case where we were previously hovering over something but are no longer.
-                    Interaction::Hovering => {
-                        interactable.change(Interaction::None);
-                    }
-
-                    _ => (),
-                }
+                let Interaction::Hovering = interactable.current() else {continue};
+                interactable.change(Interaction::None);
             }
         }
     }
