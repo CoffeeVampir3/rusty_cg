@@ -86,6 +86,7 @@ fn handle_dragging_changes(
         } else 
         if let Interaction::Dragging{start_pos,offset} = interact.previous() {
             let filter = QueryFilter::default().exclude_collider(ent);
+
             //If the cursor is in our window, and we hit something that isin't what we dropped, drop it onto the cursor.
             if let (Some(cursor_point_game), Some(cursor_point_system)) = (cursor_point_game_opt, cursor_point_system_opt) {
                 let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, filter);
