@@ -6,6 +6,7 @@ pub trait Constructable {
 }
 
 #[derive(Reflect, Component, Default, Clone)]
+#[reflect(Component)]
 pub struct Card;
 
 #[derive(Default)]
@@ -40,10 +41,13 @@ impl Constructable for CardConstructor {
 pub struct CardDescriptionConstructor {
     pub description: CardDescription,
 }
+
 #[derive(Reflect, Component, Default, Clone)]
+#[reflect(Component)]
 pub struct CardDescription {
     pub desc: String,
 }
+
 impl Constructable for CardDescriptionConstructor {
     fn construct(&self, cmds: &mut EntityCommands, card_config: &CardConstructionConfig) {
         let a = Text2dBundle {
@@ -73,10 +77,13 @@ impl Constructable for CardDescriptionConstructor {
 pub struct CardCostConstructor {
     pub cost: CardCost,
 }
+
 #[derive(Reflect, Component, Default, Clone)]
+#[reflect(Component)]
 pub struct CardCost {
     pub cost: u32,
 }
+
 impl Constructable for CardCostConstructor {
     fn construct(&self, cmds: &mut EntityCommands, card_config: &CardConstructionConfig) {
         let a = Text2dBundle {
