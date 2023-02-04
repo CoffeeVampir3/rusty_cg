@@ -6,6 +6,7 @@ impl Plugin for SpriteInteractionPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<ClickEvent>()
+            .add_event::<DropEvent>()
             .add_system(clear_drags.before(handle_mouse_interactions))
             .add_system(handle_mouse_interactions)
             .add_system(drag)
@@ -73,7 +74,8 @@ fn handle_dragging_changes(
     sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
     windows: Res<Windows>,
     rapier_context: Res<RapierContext>,
-    mut layer_sys: ResMut<TopLayer>
+    mut layer_sys: ResMut<TopLayer>,
+    mut drop_writer: EventWriter<DropEvent>,
 ) {
     let Some(window) = windows.get_primary() else {return;};
     let cursor_point_system_opt = window.cursor_position();
@@ -90,8 +92,15 @@ fn handle_dragging_changes(
             //If the cursor is in our window, and we hit something that isin't what we dropped, drop it onto the cursor.
             if let (Some(cursor_point_game), Some(cursor_point_system)) = (cursor_point_game_opt, cursor_point_system_opt) {
                 let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, filter);
-                if let Some((..)) = hit_result {
-                    xform.translation = (cursor_point_system+*offset).extend(xform.translation.z);
+                if let Some((hit_ent, ..)) = hit_result {
+                    let drop_pos = (cursor_point_system+*offset).extend(xform.translation.z);
+
+                    drop_writer.send(DropEvent {
+                        held_ent: ent,
+                        dropped_ent: hit_ent,
+                        drop_pos
+                    });
+                    xform.translation = drop_pos;
                     continue;
                 }
             }
@@ -104,6 +113,12 @@ fn handle_dragging_changes(
 pub struct ClickEvent {
     pub clicked_ent: Entity,
     pub clicked_pos: Vec2,
+}
+
+pub struct DropEvent {
+    pub held_ent: Entity,
+    pub dropped_ent: Entity,
+    pub drop_pos: Vec3,
 }
 
 #[derive(Reflect, Clone, Default, PartialEq)]
