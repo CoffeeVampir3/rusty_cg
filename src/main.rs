@@ -1,7 +1,5 @@
-mod cg_sys;
 mod cards;
 mod interactions;
-pub use cg_sys::*;
 pub use cards::*;
 pub use interactions::*;
 
@@ -18,7 +16,7 @@ fn main() {
         .add_plugin(SpriteLayerSystem)
         .add_plugin(CGCorePlugin)
         .add_plugin(CardConstructionKitPlugin)
-        .add_plugin(CGSys)
+        .add_plugin(SpriteInteractionPlugin)
         .run();
 }
 
