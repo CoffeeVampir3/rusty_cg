@@ -1,4 +1,7 @@
 pub use crate::*;
+use bevy::{prelude::*, window::Window};
+use super::helpers;
+
 pub struct SpriteInteractionPlugin;
 
 impl Plugin for SpriteInteractionPlugin {
