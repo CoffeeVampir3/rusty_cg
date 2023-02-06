@@ -1,5 +1,4 @@
 pub use crate::*;
-use bevy_rapier2d::prelude::RapierContext;
 pub struct SpriteInteractionPlugin;
 
 impl Plugin for SpriteInteractionPlugin {
@@ -71,9 +70,8 @@ fn drag(
 
 fn handle_dragging_changes(
     mut interactables: Query<(Entity, &mut Transform, &mut Interactable), Changed<Interactable>>,
-    sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
+    sprites: Query<(Entity, &Sprite, &GlobalTransform)>,
     windows: Res<Windows>,
-    rapier_context: Res<RapierContext>,
     mut layer_sys: ResMut<TopLayer>,
     mut drop_writer: EventWriter<DropEvent>,
 ) {
@@ -87,11 +85,9 @@ fn handle_dragging_changes(
             xform.translation = xform.translation.truncate().extend(layer_sys.top());
         } else 
         if let Interaction::Dragging{start_pos,offset} = interact.previous() {
-            let filter = QueryFilter::default().exclude_collider(ent);
-
             //If the cursor is in our window, and we hit something that isin't what we dropped, drop it onto the cursor.
             if let (Some(cursor_point_game), Some(cursor_point_system)) = (cursor_point_game_opt, cursor_point_system_opt) {
-                let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, filter);
+                let hit_result = helpers::pointcast_2d(cursor_point_game, &sprites, Some(ent));
                 if let Some((hit_ent, ..)) = hit_result {
                     let drop_pos = (cursor_point_system+*offset).extend(xform.translation.z);
 
@@ -188,15 +184,14 @@ fn handle_mouse_interactions(
     button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     mut interactables: Query<(Entity, &mut Interactable)>,
-    sprites: Query<(Entity, &GlobalTransform), With<Sprite>>,
-    rapier_context: Res<RapierContext>,
+    sprites: Query<(Entity, &Sprite, &GlobalTransform)>,
     mut click_writer: EventWriter<ClickEvent>,
 ) {
     let Some(window) = windows.get_primary() else {return;};
     let Some(cursor_point_system) = window.cursor_position() else {return;};
     let Some(cursor_point_game) = helpers::get_window_relative_cursor_pos(&window) else {return};
 
-    let hit_result = helpers::pointcast_2d(&rapier_context, cursor_point_game, &sprites, QueryFilter::default());
+    let hit_result = helpers::pointcast_2d(cursor_point_game, &sprites, None);
 
     let left_just_pressed = button_input.just_pressed(MouseButton::Left);
     for (ent, mut interactable) in interactables.iter_mut() {
@@ -207,7 +202,7 @@ fn handle_mouse_interactions(
         }
         match hit_result {
             //Did we hit an entity and it matches our current iterator?
-            Some((hit_ent, hit_xform)) if hit_ent == ent => match interactable.current() {
+            Some((hit_ent, _, hit_xform)) if hit_ent == ent => match interactable.current() {
                 Interaction::None => {
                     interactable.change(Interaction::Hovering);
                 }

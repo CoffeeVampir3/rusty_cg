@@ -9,19 +9,13 @@ pub use sprite_layers::*;
 pub use cards::*;
 
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
-
 use bevy_egui::*;
-
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_inspector_egui_rapier::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         //.add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugin(InspectableRapierPlugin)
         .add_plugin(WorldInspectorPlugin)
         //.add_plugin(EguiPlugin)
         .add_plugin(SpriteLayerSystem)
@@ -66,8 +60,6 @@ fn setup(
 
     commands
         .spawn(test_drop_zone)
-        .insert(Collider::cuboid(400.0, 100.0))
-        .insert(Sensor)
         .insert(GameplayTagGroup::default());
 
     make_test_hand(commands, &asset_server, &card_config, window);

@@ -26,11 +26,6 @@ impl Constructable for ImageConstructor {
         cmds.insert(CardImage.clone());
         cmds.insert(bun)
         .insert(Name::new("Card"))
-        .insert(Collider::cuboid(
-            card_config.card_width / 2.0,
-            card_config.card_height / 2.0,
-        ))
-        .insert(Sensor)
         .insert(Interactable::default());
     }
 }
