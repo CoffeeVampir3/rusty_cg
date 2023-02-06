@@ -12,8 +12,7 @@ impl Plugin for CardConstructionKitPlugin {
             .register_type::<GameplayTag>()
             .register_type::<HashSet<GameplayTag>>()
             .register_type::<GameplayTagGroup>()
-            .add_startup_system(initialize_construction_config)
-            .add_startup_system_to_stage(StartupStage::PostStartup, test);
+            .add_startup_system(initialize_construction_config);
     }
 }
 
@@ -41,28 +40,4 @@ fn initialize_construction_config(mut commands: Commands, asset_server: Res<Asse
             color: Color::BLACK,
         },
     });
-}
-
-fn test(
-    mut commands: Commands, 
-    asset_server: Res<AssetServer>,
-    card_config: Res<CardConstructionConfig>
-) {
-    let fireball = FireballCard::default().make();
-    let tyrant = EmpireCarnageTyrant::default().make();
-
-    let generic = CardBase {
-        name: NameConstructor { name: "Test Card".to_string() },
-        desc: DescriptionConstructor { desc: "Test Card Description".to_string() },
-        image: ImageConstructor { texture_path: "card_images/black_empire/orb_of_annihilation.png".to_string() },
-    }.make();
-
-    let cards = vec![fireball, tyrant, generic];
-
-    for card in cards {
-        let mut initial = commands.spawn_empty();
-        for piece in card {
-            piece.construct(&mut initial, &asset_server, &card_config);
-        }
-    }
 }

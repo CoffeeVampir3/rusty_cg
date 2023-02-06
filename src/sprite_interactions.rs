@@ -98,9 +98,12 @@ fn handle_dragging_changes(
                     drop_writer.send(DropEvent {
                         held_ent: ent,
                         dropped_ent: hit_ent,
-                        drop_pos
+                        drop_pos,
+                        start_pos: *start_pos,
                     });
-                    xform.translation = drop_pos;
+                    
+                    //TODO:: @Z, Possibly a temporary measure. 
+                    xform.translation = *start_pos; 
                     continue;
                 }
             }
@@ -119,6 +122,7 @@ pub struct DropEvent {
     pub held_ent: Entity,
     pub dropped_ent: Entity,
     pub drop_pos: Vec3,
+    pub start_pos: Vec3,
 }
 
 #[derive(Reflect, Clone, Default, PartialEq)]

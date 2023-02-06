@@ -35,11 +35,17 @@ pub struct CGCorePlugin;
 
 impl Plugin for CGCorePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup);
+        app.add_startup_system_to_stage(StartupStage::PostStartup, setup);
     }
 }
 
-fn setup(mut commands: Commands) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    card_config: Res<CardConstructionConfig>,
+    windows: Res<Windows>,
+) {
+    let Some(window) = windows.get_primary() else {return;};
     commands.spawn(Camera2dBundle::default());
 
     let test_drop_zone = SpriteBundle {
@@ -63,4 +69,35 @@ fn setup(mut commands: Commands) {
         .insert(Collider::cuboid(400.0, 100.0))
         .insert(Sensor)
         .insert(GameplayTagGroup::default());
+
+    make_test_hand(commands, &asset_server, &card_config, window);
+}
+
+fn make_test_hand(mut commands: Commands, asset_server: &AssetServer, card_config: &CardConstructionConfig, window: &Window) {
+    let fireball = FireballCard::default().make();
+    let tyrant = EmpireCarnageTyrant::default().make();
+
+    let generic = CardBase {
+        name: NameConstructor { name: "Test Card".to_string() },
+        desc: DescriptionConstructor { desc: "Test Card Description".to_string() },
+        image: ImageConstructor { texture_path: "card_images/black_empire/orb_of_annihilation.png".to_string() },
+    }.make();
+
+    let cards = vec![fireball, tyrant, generic];
+
+    let mut i = -1;
+    for card in cards {
+        let mut initial = commands.spawn_empty();
+        for piece in card {
+            piece.construct(&mut initial, &asset_server, &card_config);
+        }
+        initial.insert(TransformBundle {
+            local: Transform {
+                translation: Vec3::new(i as f32 * card_config.card_width, (-window.height() + card_config.card_height)/2.0, 0.0),
+                ..default()
+            },
+            ..default()
+        });
+        i += 1;
+    }
 }
