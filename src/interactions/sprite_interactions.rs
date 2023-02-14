@@ -8,25 +8,30 @@ impl Plugin for SpriteInteractionPlugin {
         app
             .add_event::<ClickEvent>()
             .add_event::<DropEvent>()
+
             .add_system(clear_drags.before(handle_mouse_interactions))
             .add_system(handle_mouse_interactions)
             .add_system(drag)
             .add_system(handle_dragging_changes)
-
             .add_system(process_hovering)
-
-            //.add_system(click_debugger)
-            //.add_system(interaction_debugger)
             ;
+
+        #[cfg(DEBUG_ENABLED)]
+        app
+            .add_system(click_debugger)
+            .add_system(interaction_debugger)
+        ;
     }
 }
 
+#[cfg(DEBUG_ENABLED)]
 fn click_debugger(mut click_reader: EventReader<ClickEvent>) {
     for ev in click_reader.iter() {
         println!("Clicked: {:?}", ev.clicked_ent);
     }
 }
 
+#[cfg(DEBUG_ENABLED)]
 fn interaction_debugger(interactables: Query<(Entity, &Interactable), Changed<Interactable>>) {
     for (e, interactable) in &interactables {
         println!(

@@ -1,16 +1,22 @@
 use bevy::{prelude::*, ecs::system::EntityCommands, text::Text2dBounds};
 
-use crate::{Constructable, CardConstructionConfig};
+use crate::{Constructable, CardConstructionConfig, CardComponent};
 
 #[derive(Default, Clone)]
 pub struct CostConstructor {
     pub cost: CardCost,
 }
 
-#[derive(Reflect, Component, Default, Clone)]
+#[derive(Reflect, Component, Default, Clone, serde::Serialize, serde::Deserialize)]
 #[reflect(Component)]
 pub struct CardCost {
     pub cost: u32,
+}
+
+impl CardComponent for CardCost{
+    fn get_name(&self) -> String {
+        "Card Cost".to_string()
+    }
 }
 
 impl Constructable for CostConstructor {

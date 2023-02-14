@@ -7,10 +7,16 @@ pub struct DescriptionConstructor {
     pub desc: String,
 }
 
-#[derive(Reflect, Component, Default, Clone)]
+#[derive(Reflect, Component, Default, Clone, serde::Serialize, serde::Deserialize)]
 #[reflect(Component)]
 pub struct CardDescription {
     pub desc: String,
+}
+
+impl CardComponent for CardDescription{
+    fn get_name(&self) -> String {
+        "Description".to_string()
+    }
 }
 
 impl Constructable for DescriptionConstructor {

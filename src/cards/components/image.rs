@@ -2,13 +2,20 @@ use bevy::ecs::system::EntityCommands;
 
 pub use crate::*;
 
-#[derive(Reflect, Component, Default, Clone)]
+#[derive(Reflect, Component, Default, Clone, serde::Serialize, serde::Deserialize)]
 #[reflect(Component)]
 pub struct CardImage;
 
 #[derive(Default, Clone)]
 pub struct ImageConstructor {
     pub texture_path: String,
+}
+
+
+impl CardComponent for CardImage{
+    fn get_name(&self) -> String {
+        "Image".to_string()
+    }
 }
 
 impl Constructable for ImageConstructor {

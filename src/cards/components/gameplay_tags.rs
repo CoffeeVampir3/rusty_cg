@@ -1,9 +1,16 @@
 use bevy::reflect::Reflect;
 
-#[derive(Default, Clone, Copy, PartialEq, Hash, Eq, Reflect)]
+#[derive(Reflect, Default, Clone, Copy, PartialEq, Hash, Eq, serde::Serialize, serde::Deserialize)]
 pub enum GameplayTag {
     #[default]
     Placeholder,
     Creature,
-    TestThird
+
+
+    #[cfg(test)]
+    TestOne,
+    #[cfg(test)]
+    TestTwo,
+    #[cfg(test)]
+    TestThree,
 }

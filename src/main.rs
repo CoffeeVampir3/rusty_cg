@@ -3,16 +3,13 @@ mod interactions;
 pub use cards::*;
 pub use interactions::*;
 
-use bevy::prelude::*;
+use bevy::{prelude::*};
 use bevy_egui::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        //.add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(WorldInspectorPlugin)
-        //.add_plugin(EguiPlugin)
+        .add_plugin(EguiPlugin)
         .add_plugin(SpriteLayerSystem)
         .add_plugin(CGCorePlugin)
         .add_plugin(CardConstructionKitPlugin)
@@ -24,7 +21,19 @@ pub struct CGCorePlugin;
 
 impl Plugin for CGCorePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PostStartup, setup);
+        app
+        .add_startup_system_to_stage(StartupStage::PostStartup, setup);
+        //.add_system(test_trait_query);
+    }
+}
+
+fn test_trait_query(
+    components: Query<&dyn CardComponent>
+) {
+    for comps in &components {
+        for comp in comps {
+            println!("{:?}", comp.get_name());
+        }
     }
 }
 

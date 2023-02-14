@@ -22,10 +22,16 @@ impl Constructable for GameplayTagGroupConstructor {
     }
 }
 
-#[derive(Component, Default, Clone, Reflect)]
+#[derive(Reflect, Component, Default, Clone, serde::Serialize, serde::Deserialize)]
 #[reflect(Component)]
 pub struct GameplayTagGroup {
     tags: HashSet::<GameplayTag>
+}
+
+impl CardComponent for GameplayTagGroup{
+    fn get_name(&self) -> String {
+        "Tags".to_string()
+    }
 }
 
 impl GameplayTagGroup {
@@ -126,57 +132,57 @@ mod tag_tests {
     #[test]
     fn gameplay_tag_group_test_all() {
         use GameplayTag::*;
-        let test_tags = GameplayTagGroup::make_test_set(&[Creature, Placeholder]);
-        let test_tags2 = GameplayTagGroup::make_test_set(&[Placeholder]);
-        let test_tags3 = GameplayTagGroup::make_test_set(&[TestThird]);
+        let test_tags = GameplayTagGroup::make_test_set(&[TestTwo, TestOne]);
+        let test_tags2 = GameplayTagGroup::make_test_set(&[TestOne]);
+        let test_tags3 = GameplayTagGroup::make_test_set(&[TestThree]);
     
         assert_eq!(test_tags.all_g(&test_tags), true, "Failed all self test.");
-        assert_eq!(test_tags.all(&[Creature, Placeholder]), true, "Failed all Creature Placeholder");
-        assert_eq!(test_tags.all(&[Creature]), true, "Failed all Creature");
+        assert_eq!(test_tags.all(&[TestTwo, TestOne]), true, "Failed all TestTwo TestOne");
+        assert_eq!(test_tags.all(&[TestTwo]), true, "Failed all TestTwo");
     
         assert_eq!(test_tags.all_g(&test_tags2), true, "Failed all test tags 1 V test tags 2");
         assert_eq!(test_tags2.all_g(&test_tags), false, "Failed all test tags 2 V test tags 1");
-        assert_eq!(test_tags2.all(&[Creature, Placeholder]), false, "Failed all creature placeholder.");
+        assert_eq!(test_tags2.all(&[TestTwo, TestOne]), false, "Failed all TestTwo TestOne.");
     
-        assert_eq!(test_tags2.all(&[TestThird]), false, "Failed all third.");
+        assert_eq!(test_tags2.all(&[TestThree]), false, "Failed all third.");
         assert_eq!(test_tags2.all_g(&test_tags3), false, "Failed all third g.");
     }
     
     #[test]
     fn gameplay_tag_group_test_any() {
         use GameplayTag::*;
-        let test_tags = GameplayTagGroup::make_test_set(&[Creature, Placeholder]);
-        let test_tags2 = GameplayTagGroup::make_test_set(&[Placeholder]);
-        let test_tags3 = GameplayTagGroup::make_test_set(&[TestThird]);
+        let test_tags = GameplayTagGroup::make_test_set(&[TestTwo, TestOne]);
+        let test_tags2 = GameplayTagGroup::make_test_set(&[TestOne]);
+        let test_tags3 = GameplayTagGroup::make_test_set(&[TestThree]);
     
         assert_eq!(test_tags.any_g(&test_tags), true, "Failed any self test.");
-        assert_eq!(test_tags.any(&[Creature, Placeholder]), true, "Failed any Creature Placeholder");
-        assert_eq!(test_tags.any(&[Creature]), true, "Failed any Creature");
+        assert_eq!(test_tags.any(&[TestTwo, TestOne]), true, "Failed any TestTwo TestOne");
+        assert_eq!(test_tags.any(&[TestTwo]), true, "Failed any TestTwo");
     
         assert_eq!(test_tags.any_g(&test_tags2), true, "Failed any test tags 1 V test tags 2");
         assert_eq!(test_tags2.any_g(&test_tags), true, "Failed any test tags 2 V test tags 1");
-        assert_eq!(test_tags2.any(&[Creature, Placeholder]), true, "Failed any creature placeholder.");
+        assert_eq!(test_tags2.any(&[TestTwo, TestOne]), true, "Failed any TestTwo TestOne.");
     
-        assert_eq!(test_tags2.any(&[TestThird]), false, "Failed any third.");
+        assert_eq!(test_tags2.any(&[TestThree]), false, "Failed any third.");
         assert_eq!(test_tags2.any_g(&test_tags3), false, "Failed any third g.");
     }
     
     #[test]
     fn gameplay_tag_group_test_none() {
         use GameplayTag::*;
-        let test_tags = GameplayTagGroup::make_test_set(&[Creature, Placeholder]);
-        let test_tags2 = GameplayTagGroup::make_test_set(&[Placeholder]);
-        let test_tags3 = GameplayTagGroup::make_test_set(&[TestThird]);
+        let test_tags = GameplayTagGroup::make_test_set(&[TestTwo, TestOne]);
+        let test_tags2 = GameplayTagGroup::make_test_set(&[TestOne]);
+        let test_tags3 = GameplayTagGroup::make_test_set(&[TestThree]);
     
         assert_eq!(test_tags.none_g(&test_tags), false, "Failed none self test.");
-        assert_eq!(test_tags.none(&[Creature, Placeholder]), false, "Failed none Creature Placeholder");
-        assert_eq!(test_tags.none(&[Creature]), false, "Failed none Creature");
+        assert_eq!(test_tags.none(&[TestTwo, TestOne]), false, "Failed none TestTwo TestOne");
+        assert_eq!(test_tags.none(&[TestTwo]), false, "Failed none TestTwo");
     
         assert_eq!(test_tags.none_g(&test_tags2), false, "Failed none test tags 1 V test tags 2");
         assert_eq!(test_tags2.none_g(&test_tags), false, "Failed none test tags 2 V test tags 1");
-        assert_eq!(test_tags2.none(&[Creature, Placeholder]), false, "Failed none creature placeholder.");
+        assert_eq!(test_tags2.none(&[TestTwo, TestOne]), false, "Failed none TestTwo TestOne.");
     
-        assert_eq!(test_tags2.none(&[TestThird]), true, "Failed none third.");
+        assert_eq!(test_tags2.none(&[TestThree]), true, "Failed none third.");
         assert_eq!(test_tags2.none_g(&test_tags3), true, "Failed none third g.");
     }
 }
