@@ -37,7 +37,7 @@ pub struct CardConstructionConfig {
 }
 
 fn initialize_construction_config(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraCode-Bold.ttf");
+    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands.insert_resource(CardConstructionConfig {
         card_width: 200.0,
         card_height: 300.0,

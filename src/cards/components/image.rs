@@ -1,4 +1,4 @@
-use bevy::ecs::system::EntityCommands;
+use bevy::{ecs::system::EntityCommands};
 
 pub use crate::*;
 

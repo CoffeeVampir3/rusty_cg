@@ -1,10 +1,12 @@
 mod cards;
 mod interactions;
+mod test_material;
 pub use cards::*;
 pub use interactions::*;
 
-use bevy::{prelude::*};
+use bevy::{prelude::*, sprite::{ MaterialMesh2dBundle, Material2dPlugin}};
 use bevy_egui::*;
+use interactions::cards::test_material::{CustomMaterial, TestCustomMaterialPlugin};
 
 fn main() {
     App::new()
@@ -14,6 +16,8 @@ fn main() {
         .add_plugin(CGCorePlugin)
         .add_plugin(CardConstructionKitPlugin)
         .add_plugin(SpriteInteractionPlugin)
+        .add_plugin(Material2dPlugin::<CustomMaterial>::default())
+        .add_plugin(TestCustomMaterialPlugin)
         .run();
 }
 
@@ -41,11 +45,29 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     card_config: Res<CardConstructionConfig>,
+    mut materials: ResMut<Assets<CustomMaterial>>,
+    mut mesh_assets: ResMut<Assets<Mesh>>,
     windows: Res<Windows>,
 ) {
     let Some(window) = windows.get_primary() else {return;};
     commands.spawn(Camera2dBundle::default());
 
+    let mat = CustomMaterial {
+        time: 0.0,
+        color_texture: asset_server.load("test/depth4.png"),
+    };
+
+    commands
+    .spawn(MaterialMesh2dBundle {
+        mesh: mesh_assets.add(Mesh::from(
+            shape::Quad::new(Vec2{x:512.0, y:768.0})
+        )).into(),
+        material: materials.add(mat),
+        ..default()
+    });
+
+
+/*
     let test_drop_zone = SpriteBundle {
         //texture: asset_server.load("test/whatever.png"),
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
@@ -67,6 +89,7 @@ fn setup(
         .insert(GameplayTagGroup::default());
 
     make_test_hand(commands, &asset_server, &card_config, window);
+    */
 }
 
 fn make_test_hand(mut commands: Commands, asset_server: &AssetServer, card_config: &CardConstructionConfig, window: &Window) {
@@ -76,7 +99,7 @@ fn make_test_hand(mut commands: Commands, asset_server: &AssetServer, card_confi
     let generic = CardBase {
         name: NameConstructor { name: "Test Card".to_string() },
         desc: DescriptionConstructor { desc: "Test Card Description".to_string() },
-        image: ImageConstructor { texture_path: "card_images/black_empire/orb_of_annihilation.png".to_string() },
+        image: ImageConstructor { texture_path: "test/young-magi.png".to_string() },
     }.make();
 
     let cards = vec![fireball, tyrant, generic];

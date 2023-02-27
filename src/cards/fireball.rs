@@ -9,7 +9,7 @@ impl Default for FireballCard {
     fn default() -> Self {
         FireballCard {
             base: CardBase {
-                image: ImageConstructor {texture_path:"card_images/black_empire/disembody.png".to_string()},
+                image: ImageConstructor {texture_path:"test/focalize.png".to_string()},
                 name: NameConstructor{name:"Fireball".to_string()},
                 desc: DescriptionConstructor{desc:"Fireball Description".to_string()},
             },

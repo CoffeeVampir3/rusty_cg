@@ -13,7 +13,7 @@ impl Default for EmpireCarnageTyrant {
                 tags: GameplayTagGroupConstructor::new(&[GameplayTag::Creature])
             },
             base: CardBase {
-                image: ImageConstructor {texture_path:"card_images/black_empire/carnage_tyrant.png".to_string()},
+                image: ImageConstructor {texture_path:"test/disintegrate.png".to_string()},
                 name: NameConstructor{name:"Carnage Tyrant".to_string()},
                 desc: DescriptionConstructor{desc:"Carnage Tyrant Description".to_string()},
             },
