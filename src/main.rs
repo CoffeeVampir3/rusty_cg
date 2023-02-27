@@ -1,9 +1,11 @@
 mod cards;
 mod interactions;
+mod dispatcher;
 pub use cards::*;
 pub use interactions::*;
 use bevy::{prelude::*};
 use bevy_egui::*;
+use interactions::cards::dispatcher::DispatcherPlugin;
 
 fn main() {
     App::new()
@@ -13,6 +15,7 @@ fn main() {
         .add_plugin(CGCorePlugin)
         .add_plugin(CardConstructionKitPlugin)
         .add_plugin(SpriteInteractionPlugin)
+        .add_plugin(DispatcherPlugin)
         .run();
 }
 
@@ -69,15 +72,28 @@ fn setup(
 
 }
 
+#[derive(Component)]
+pub struct Test {
+    pub validate: fn(&mut World, target:Entity)->bool
+}
+
+fn validate(world: &mut World, target: Entity) -> bool {
+    let Some(tags) = world.get::<GameplayTagGroup>(target) else {return false};
+    tags.all(&[GameplayTag::Creature])
+}
+
 fn make_test_hand(mut commands: Commands, asset_server: &AssetServer, card_config: &CardConstructionConfig, window: &Window) {
     let fireball = FireballCard::default().make();
     let tyrant = EmpireCarnageTyrant::default().make();
 
-    let generic = CardBase {
+    let mut generic = CardBase {
         name: NameConstructor { name: "Test Card".to_string() },
         desc: DescriptionConstructor { desc: "Test Card Description".to_string() },
         image: ImageConstructor { texture_path: "test/young-magi.png".to_string() },
     }.make();
+
+    let tg = Box::new(GameplayTagGroupConstructor::new(&[GameplayTag::Creature]));
+    generic.push(tg);
 
     let cards = vec![fireball, tyrant, generic];
 

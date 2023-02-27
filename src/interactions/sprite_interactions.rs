@@ -99,8 +99,8 @@ fn handle_dragging_changes(
                     let drop_pos = (cursor_point_system+*offset).extend(xform.translation.z);
 
                     drop_writer.send(DropEvent {
-                        held_ent: ent,
-                        dropped_ent: hit_ent,
+                        dragged: ent,
+                        dropped_on: hit_ent,
                         drop_pos,
                         start_pos: *start_pos,
                     });
@@ -122,8 +122,8 @@ pub struct ClickEvent {
 }
 
 pub struct DropEvent {
-    pub held_ent: Entity,
-    pub dropped_ent: Entity,
+    pub dragged: Entity,
+    pub dropped_on: Entity,
     pub drop_pos: Vec3,
     pub start_pos: Vec3,
 }
