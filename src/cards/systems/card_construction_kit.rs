@@ -1,28 +1,16 @@
 pub use crate::*;
-use bevy::utils::HashSet;
 
 pub struct CardConstructionKitPlugin;
 impl Plugin for CardConstructionKitPlugin {
     fn build(&self, app: &mut App) {
         use bevy_trait_query::RegisterExt;
-        app
-            .register_type::<GameplayTag>()
-            .register_type::<HashSet<GameplayTag>>()
-
-            .register_type::<CardImage>()
-            .register_type::<CardDescription>()
-            .register_type::<CardCost>()
-            .register_type::<CardName>()
-            .register_type::<GameplayTagGroup>()
-            .register_type::<CardName>()
-            .register_component_as::<dyn CardComponent, CardImage>()
-            .register_component_as::<dyn CardComponent, CardDescription>()
-            .register_component_as::<dyn CardComponent, CardCost>()
-            .register_component_as::<dyn CardComponent, GameplayTagGroup>()
-            .register_component_as::<dyn CardComponent, CardCost>()
-            .register_component_as::<dyn CardComponent, CardName>()
-            
-            .add_startup_system(initialize_construction_config);
+        register_types_and_components!(app, 
+            CardCost,
+            CardDescription,  
+            GameplayTagGroup, 
+            CardImage, 
+            CardName);
+        app.add_startup_system(initialize_construction_config);
     }
 }
 

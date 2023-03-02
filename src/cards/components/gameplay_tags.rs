@@ -5,12 +5,4 @@ pub enum GameplayTag {
     #[default]
     Placeholder,
     Creature,
-
-
-    #[cfg(test)]
-    TestOne,
-    #[cfg(test)]
-    TestTwo,
-    #[cfg(test)]
-    TestThree,
 }

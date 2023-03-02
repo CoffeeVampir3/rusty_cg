@@ -1,6 +1,7 @@
 mod cards;
 mod interactions;
 mod dispatcher;
+mod structures;
 pub use cards::*;
 pub use interactions::*;
 use bevy::{prelude::*};
@@ -25,17 +26,6 @@ impl Plugin for CGCorePlugin {
     fn build(&self, app: &mut App) {
         app
         .add_startup_system_to_stage(StartupStage::PostStartup, setup);
-        //.add_system(test_trait_query);
-    }
-}
-
-fn test_trait_query(
-    components: Query<&dyn CardComponent>
-) {
-    for comps in &components {
-        for comp in comps {
-            println!("{:?}", comp.get_name());
-        }
     }
 }
 
@@ -75,11 +65,6 @@ fn setup(
 #[derive(Component)]
 pub struct Test {
     pub validate: fn(&mut World, target:Entity)->bool
-}
-
-fn validate(world: &mut World, target: Entity) -> bool {
-    let Some(tags) = world.get::<GameplayTagGroup>(target) else {return false};
-    tags.all(&[GameplayTag::Creature])
 }
 
 fn make_test_hand(mut commands: Commands, asset_server: &AssetServer, card_config: &CardConstructionConfig, window: &Window) {
