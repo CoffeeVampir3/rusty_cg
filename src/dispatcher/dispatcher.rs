@@ -19,6 +19,6 @@ fn on_drop_trait_q(
         let Ok(initiator_name) = card_components.get_component::<CardName>(initiator) else {continue};
         let Ok(target_name) = card_components.get_component::<CardName>(target) else {continue};
 
-        println!("Wew lad I: {:?} T: {:?}", initiator_name.name, target_name.name);
+        println!("Wew lad I: {initiator:?} {:?} T: {target:?} {:?}", initiator_name.name, target_name.name);
     }
 }

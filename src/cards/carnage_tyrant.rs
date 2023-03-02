@@ -23,12 +23,10 @@ impl Default for EmpireCarnageTyrant {
 
 impl Descriptor for EmpireCarnageTyrant {
     fn make(&self) -> Vec::<Box<dyn Constructable>> {
-        let clone = self.clone();
-
         let mut all_parts = Vec::<Box<dyn Constructable>>::new();
 
-        all_parts.append(&mut clone.creature.make());
-        all_parts.append(&mut clone.base.make());
+        all_parts.append(&mut self.creature.make());
+        all_parts.append(&mut self.base.make());
 
         all_parts
     }

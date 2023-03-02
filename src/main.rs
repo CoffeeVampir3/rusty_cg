@@ -80,9 +80,9 @@ fn make_test_hand(mut commands: Commands, asset_server: &AssetServer, card_confi
     let tg = Box::new(GameplayTagGroupConstructor::new(&[GameplayTag::Creature]));
     generic.push(tg);
 
-    let cards = vec![fireball, tyrant, generic];
+    let cards = vec![generic.duplicate(), generic, fireball.duplicate(), FireballCard::default().make(), FireballCard::default().make(), tyrant.duplicate(), tyrant];
 
-    let mut i = -1;
+    let mut i = -2;
     for card in cards {
         let mut initial = commands.spawn_empty();
         for piece in card {

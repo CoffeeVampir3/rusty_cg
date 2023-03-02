@@ -11,7 +11,6 @@ pub struct ImageConstructor {
     pub texture_path: String,
 }
 
-
 impl CardComponent for CardImage{
     fn get_name(&self) -> String {
         "Image".to_string()
