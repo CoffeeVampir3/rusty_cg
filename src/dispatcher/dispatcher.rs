@@ -11,7 +11,6 @@ fn on_drop_trait_q(
     mut drop_evs: EventReader<DropEvent>,
     card_components: Query<&dyn CardComponent>
 ) {
-
     for ev in drop_evs.iter() {
         let initiator = ev.dragged;
         let target = ev.dropped_on;
