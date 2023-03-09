@@ -3,7 +3,7 @@ pub use crate::*;
 pub struct DispatcherPlugin;
 impl Plugin for DispatcherPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PostUpdate, on_drop_trait_q);
+        app.add_system(on_drop_trait_q.in_base_set(CoreSet::PostUpdate));
     }
 }
 

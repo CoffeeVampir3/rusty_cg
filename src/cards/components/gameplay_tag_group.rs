@@ -9,7 +9,7 @@ pub struct GameplayTagGroupConstructor {
 
 impl GameplayTagGroupConstructor {
     pub fn new(new_tags: &[GameplayTag]) -> Self {
-        Self { tags: NetSet::<GameplayTag>::new(new_tags) } 
+        Self{tags:NetSet::<GameplayTag>::new(new_tags)}
     }
 }
 

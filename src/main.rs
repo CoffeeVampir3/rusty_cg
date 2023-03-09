@@ -4,7 +4,7 @@ mod dispatcher;
 mod structures;
 pub use cards::*;
 pub use interactions::*;
-use bevy::{prelude::*};
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_egui::*;
 use interactions::cards::dispatcher::DispatcherPlugin;
 
@@ -25,7 +25,7 @@ pub struct CGCorePlugin;
 impl Plugin for CGCorePlugin {
     fn build(&self, app: &mut App) {
         app
-        .add_startup_system_to_stage(StartupStage::PostStartup, setup);
+        .add_startup_system(setup.in_base_set(StartupSet::PostStartup));
     }
 }
 
@@ -33,9 +33,9 @@ fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     card_config: Res<CardConstructionConfig>,
-    windows: Res<Windows>,
+    main_window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let Some(window) = windows.get_primary() else {return;};
+    let Ok(window) = main_window.get_single() else {return;};
     commands.spawn(Camera2dBundle::default());
 
     let test_drop_zone = SpriteBundle {

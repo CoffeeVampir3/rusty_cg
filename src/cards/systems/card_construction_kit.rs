@@ -30,7 +30,7 @@ fn initialize_construction_config(mut commands: Commands, asset_server: Res<Asse
         card_width: 200.0,
         card_height: 300.0,
         card_size: Vec2 { x: 200.0, y: 300.0 },
-        text_alignment: TextAlignment::CENTER,
+        text_alignment: TextAlignment::Center,
         magic_number: 0.5 / 524288.0,
         text_style: TextStyle {
             font_size: 24.0,

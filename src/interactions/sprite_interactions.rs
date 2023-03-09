@@ -43,11 +43,11 @@ fn interaction_debugger(interactables: Query<(Entity, &Interactable), Changed<In
 }
 
 fn process_hovering(
-    windows: Res<Windows>,
+    main_window: Query<&Window, With<PrimaryWindow>>,
     interactables: Query<(Entity, &GlobalTransform, &Interactable)>,
-    mut egui_context: ResMut<EguiContext>
+    mut egui_context: EguiContexts,
 ) {
-    let Some(window) = windows.get_primary() else {return;};
+    let Ok(window) = main_window.get_single() else {return;};
     let Some(cursor_point_system) = window.cursor_position() else {return;};
 
     for (_, _, interact) in &interactables {
@@ -64,9 +64,9 @@ fn process_hovering(
 
 fn drag(
     mut interactables: Query<(Entity, &mut Transform, &Interactable)>,
-    windows: Res<Windows>,
+    main_window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let Some(window) = windows.get_primary() else {return;};
+    let Ok(window) = main_window.get_single() else {return;};
     let Some(cursor_point_system) = window.cursor_position() else {return;};
 
     for (_, mut xform, interact) in interactables.iter_mut() {
@@ -78,11 +78,11 @@ fn drag(
 fn handle_dragging_changes(
     mut interactables: Query<(Entity, &mut Transform, &mut Interactable), Changed<Interactable>>,
     sprites: Query<(Entity, &Sprite, &GlobalTransform)>,
-    windows: Res<Windows>,
+    main_window: Query<&Window, With<PrimaryWindow>>,
     mut layer_sys: ResMut<TopLayer>,
     mut drop_writer: EventWriter<DropEvent>,
 ) {
-    let Some(window) = windows.get_primary() else {return;};
+    let Ok(window) = main_window.get_single() else {return;};
     let cursor_point_system_opt = window.cursor_position();
     let cursor_point_game_opt = helpers::get_window_relative_cursor_pos(&window);
 
@@ -189,12 +189,12 @@ fn clear_drags(button_input: Res<Input<MouseButton>>, mut interactables: Query<&
 
 fn handle_mouse_interactions(
     button_input: Res<Input<MouseButton>>,
-    windows: Res<Windows>,
+    main_window: Query<&Window, With<PrimaryWindow>>,
     mut interactables: Query<(Entity, &mut Interactable)>,
     sprites: Query<(Entity, &Sprite, &GlobalTransform)>,
     mut click_writer: EventWriter<ClickEvent>,
 ) {
-    let Some(window) = windows.get_primary() else {return;};
+    let Ok(window) = main_window.get_single() else {return;};
     let Some(cursor_point_system) = window.cursor_position() else {return;};
     let Some(cursor_point_game) = helpers::get_window_relative_cursor_pos(&window) else {return};
 
